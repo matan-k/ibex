@@ -304,6 +304,10 @@ module ibex_core #(
 
   // Security
   logic [31:0] mem_enc_key;
+  logic        store_pointer;
+  logic        store_pointer_s;
+  logic        validate_pointer;
+  logic        shadow_stack_error;
 
   //////////////////////
   // Clock management //
@@ -444,6 +448,7 @@ module ibex_core #(
       .instr_fetch_err_i            ( instr_fetch_err          ),
       .instr_fetch_err_plus2_i      ( instr_fetch_err_plus2    ),
       .illegal_c_insn_i             ( illegal_c_insn_id        ),
+      .invalid_return_address_i     ( shadow_stack_error       ),
 
       .pc_id_i                      ( pc_id                    ),
 
@@ -545,7 +550,12 @@ module ibex_core #(
       .perf_mul_wait_o              ( perf_mul_wait            ),
       .perf_div_wait_o              ( perf_div_wait            ),
       .instr_id_done_o              ( instr_id_done            ),
-      .instr_id_done_compressed_o   ( instr_id_done_compressed )
+      .instr_id_done_compressed_o   ( instr_id_done_compressed ),
+
+      // Pointer Authentication
+      .store_pointer_o              ( store_pointer            ),
+      .validate_pointer_o           ( validate_pointer         )
+
   );
 
   // for RVFI only
@@ -892,6 +902,32 @@ module ibex_core #(
     assign pmp_req_err[PMP_I] = 1'b0;
     assign pmp_req_err[PMP_D] = 1'b0;
   end
+
+  ibex_shadow_stack #(
+    .RV32E(RV32E)  
+  )
+  shadow_stack_inst (
+    .clk_i(clk_i),    // Clock
+    .rst_ni(rst_ni),  // Asynchronous reset active low
+
+    .pointer_wr_i(alu_adder_result_ex),     // pointer to store in the stack. The value is taken from the ALU (1 clock after the detected instruction)
+    .pointer_rd_i(rf_rdata_a), // pointer to validate in the stack and remove. The value is taken from register 0x1 in the RF.
+    .write_indication_i(store_pointer_s),   // valid for pointer_wr_i 
+    .read_indication_i(validate_pointer),   // valid for pointer_rd_i
+    .error_o(shadow_stack_error)
+
+  );
+
+  // Sample the signals when they are valid.
+  // Store pointer address is ready 1 clock after the request is detected.
+  always_ff @(posedge clk or negedge rst_ni) begin
+    if(~rst_ni) begin
+      store_pointer_s  <= 1'b0;
+    end else begin
+      store_pointer_s <= store_pointer;
+    end
+  end
+
 
 `ifdef RVFI
   // When writeback stage is present RVFI information is emitted when instruction is finished in

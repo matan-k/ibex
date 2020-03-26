@@ -52,6 +52,7 @@ module ibex_id_stage #(
     input  logic                      illegal_c_insn_i,
     input  logic                      instr_fetch_err_i,
     input  logic                      instr_fetch_err_plus2_i,
+    input  logic                      invalid_return_address_i,
 
     input  logic [31:0]               pc_id_i,
 
@@ -164,7 +165,11 @@ module ibex_id_stage #(
     output logic                      perf_mul_wait_o,
     output logic                      perf_div_wait_o,
     output logic                      instr_id_done_o,
-    output logic                      instr_id_done_compressed_o
+    output logic                      instr_id_done_compressed_o,
+
+    // Pointer authentication
+    output logic                      store_pointer_o,
+    output logic                      validate_pointer_o                  
 );
 
   import ibex_pkg::*;
@@ -384,7 +389,11 @@ module ibex_id_stage #(
 
       // jump/branches
       .jump_in_dec_o                   ( jump_in_dec          ),
-      .branch_in_dec_o                 ( branch_in_dec        )
+      .branch_in_dec_o                 ( branch_in_dec        ),
+
+      // Pointer authentication
+      .store_pointer_o                 ( store_pointer_o        ),
+      .validate_pointer_o              ( validate_pointer_o     )
   );
 
   /////////////////////////////////
@@ -436,6 +445,7 @@ module ibex_id_stage #(
       .wfi_insn_i                     ( wfi_insn_dec            ),
       .ebrk_insn_i                    ( ebrk_insn               ),
       .csr_pipe_flush_i               ( csr_pipe_flush          ),
+      .invalid_return_address_i       ( invalid_return_address_i),
 
       // from IF-ID pipeline
       .instr_valid_i                  ( instr_valid_i           ),

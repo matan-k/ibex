@@ -93,7 +93,11 @@ module ibex_decoder #(
 
     // jump/branches
     output logic                 jump_in_dec_o,         // jump is being calculated in ALU
-    output logic                 branch_in_dec_o
+    output logic                 branch_in_dec_o,
+
+    // Pointer authentication trigger
+    output logic                 store_pointer_o,
+    output logic                 validate_pointer_o
 );
 
   import ibex_pkg::*;
@@ -198,6 +202,9 @@ module ibex_decoder #(
     ecall_insn_o                = 1'b0;
     wfi_insn_o                  = 1'b0;
 
+    validate_pointer_o            = 1'b0;
+    store_pointer_o               = 1'b0;
+
     opcode                      = opcode_e'(instr[6:0]);
 
     unique case (opcode)
@@ -213,6 +220,13 @@ module ibex_decoder #(
           // Calculate jump target
           rf_we            = 1'b0;
           jump_set_o       = 1'b1;
+
+          // Check if it is not regular jump
+          // Sample on first cycle, because otherwise it might be an instruction after a
+          // branch that was not taken.
+          if(instr[`REG_D] == 1) begin
+            store_pointer_o    = 1'b1;
+          end
         end else begin
           // Calculate and store PC+4
           rf_we            = 1'b1;
@@ -226,6 +240,13 @@ module ibex_decoder #(
           // Calculate jump target
           rf_we            = 1'b0;
           jump_set_o       = 1'b1;
+
+          // Only for function jumps (from reg 0x1).
+          // Sample on first cycle, because otherwise it might be an instruction after a
+          // branch that was not taken.
+          if(instr[`REG_S1] == 5'b1) begin
+            validate_pointer_o = 1'b1;
+          end
         end else begin
           // Calculate and store PC+4
           rf_we            = 1'b1;
