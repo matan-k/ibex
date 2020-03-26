@@ -23,8 +23,8 @@ module ibex_pmp #(
     // Access checking channels
     input  logic [33:0]             pmp_req_addr_i [PMPNumChan],
     input  ibex_pkg::pmp_req_e      pmp_req_type_i [PMPNumChan],
-    output logic                    pmp_req_err_o  [PMPNumChan]
-
+    output logic                    pmp_req_err_o  [PMPNumChan],
+    output logic                    pmp_enc_data_o
 );
 
   import ibex_pkg::*;
@@ -38,6 +38,7 @@ module ibex_pmp #(
   logic [PMPNumChan-1:0][PMPNumRegions-1:0]   region_perm_check;
   logic [PMPNumChan-1:0][PMPNumRegions-1:0]   machine_access_fault;
   logic [PMPNumChan-1:0][PMPNumRegions-1:0]   user_access_allowed;
+  logic [PMPNumChan-1:0][PMPNumRegions-1:0]   pmp_enc_check;
   logic [PMPNumChan-1:0]                      access_fault;
 
 
@@ -92,11 +93,15 @@ module ibex_pmp #(
                                           ~region_perm_check[c][r];
       // In any other mode, any access should fault unless is matches a region
       assign user_access_allowed[c][r]  = region_match_both[c][r] & region_perm_check[c][r];
+      assign pmp_enc_check[c][r]        = region_match_both[c][r] & csr_pmp_cfg_i[r].encrypt == 1'b1;
     end
     assign access_fault[c] = (priv_mode_i[c] == PRIV_LVL_M) ? |machine_access_fault[c] :
                                                               ~|user_access_allowed[c];
 
     assign pmp_req_err_o[c] = access_fault[c];
   end
+
+  // Assign Memory region encryption attirbute.
+    assign pmp_enc_data_o = |pmp_enc_check;
 
 endmodule

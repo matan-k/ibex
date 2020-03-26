@@ -24,6 +24,8 @@ module ibex_load_store_unit
     input  logic         data_rvalid_i,
     input  logic         data_err_i,
     input  logic         data_pmp_err_i,
+    input  logic         pmp_enc_data_i,
+    input  logic [31:0]  mem_enc_key_i,
 
     output logic [31:0]  data_addr_o,
     output logic         data_we_o,
@@ -111,6 +113,9 @@ module ibex_load_store_unit
   assign data_addr   = adder_result_ex_i;
   assign data_offset = data_addr[1:0];
 
+  logic [31:0]  data_rdata_dec;
+  assign data_rdata_dec = (pmp_enc_data_i & data_rvalid_i) ? data_rdata_i ^ mem_enc_key_i : data_rdata_i;
+
   ///////////////////
   // BE generation //
   ///////////////////
@@ -191,7 +196,7 @@ module ibex_load_store_unit
     if (!rst_ni) begin
       rdata_q <= '0;
     end else if (rdata_update) begin
-      rdata_q <= data_rdata_i[31:8];
+      rdata_q <= data_rdata_dec[31:8];
     end
   end
 
@@ -223,11 +228,11 @@ module ibex_load_store_unit
   // take care of misaligned words
   always_comb begin
     unique case (rdata_offset_q)
-      2'b00:   rdata_w_ext =  data_rdata_i[31:0];
-      2'b01:   rdata_w_ext = {data_rdata_i[ 7:0], rdata_q[31:8]};
-      2'b10:   rdata_w_ext = {data_rdata_i[15:0], rdata_q[31:16]};
-      2'b11:   rdata_w_ext = {data_rdata_i[23:0], rdata_q[31:24]};
-      default: rdata_w_ext =  data_rdata_i[31:0];
+      2'b00:   rdata_w_ext =  data_rdata_dec[31:0];
+      2'b01:   rdata_w_ext = {data_rdata_dec[ 7:0], rdata_q[31:8]};
+      2'b10:   rdata_w_ext = {data_rdata_dec[15:0], rdata_q[31:16]};
+      2'b11:   rdata_w_ext = {data_rdata_dec[23:0], rdata_q[31:24]};
+      default: rdata_w_ext =  data_rdata_dec[31:0];
     endcase
   end
 
@@ -240,37 +245,37 @@ module ibex_load_store_unit
     unique case (rdata_offset_q)
       2'b00: begin
         if (!data_sign_ext_q) begin
-          rdata_h_ext = {16'h0000, data_rdata_i[15:0]};
+          rdata_h_ext = {16'h0000, data_rdata_dec[15:0]};
         end else begin
-          rdata_h_ext = {{16{data_rdata_i[15]}}, data_rdata_i[15:0]};
+          rdata_h_ext = {{16{data_rdata_dec[15]}}, data_rdata_dec[15:0]};
         end
       end
 
       2'b01: begin
         if (!data_sign_ext_q) begin
-          rdata_h_ext = {16'h0000, data_rdata_i[23:8]};
+          rdata_h_ext = {16'h0000, data_rdata_dec[23:8]};
         end else begin
-          rdata_h_ext = {{16{data_rdata_i[23]}}, data_rdata_i[23:8]};
+          rdata_h_ext = {{16{data_rdata_dec[23]}}, data_rdata_dec[23:8]};
         end
       end
 
       2'b10: begin
         if (!data_sign_ext_q) begin
-          rdata_h_ext = {16'h0000, data_rdata_i[31:16]};
+          rdata_h_ext = {16'h0000, data_rdata_dec[31:16]};
         end else begin
-          rdata_h_ext = {{16{data_rdata_i[31]}}, data_rdata_i[31:16]};
+          rdata_h_ext = {{16{data_rdata_dec[31]}}, data_rdata_dec[31:16]};
         end
       end
 
       2'b11: begin
         if (!data_sign_ext_q) begin
-          rdata_h_ext = {16'h0000, data_rdata_i[7:0], rdata_q[31:24]};
+          rdata_h_ext = {16'h0000, data_rdata_dec[7:0], rdata_q[31:24]};
         end else begin
-          rdata_h_ext = {{16{data_rdata_i[7]}}, data_rdata_i[7:0], rdata_q[31:24]};
+          rdata_h_ext = {{16{data_rdata_dec[7]}}, data_rdata_dec[7:0], rdata_q[31:24]};
         end
       end
 
-      default: rdata_h_ext = {16'h0000, data_rdata_i[15:0]};
+      default: rdata_h_ext = {16'h0000, data_rdata_dec[15:0]};
     endcase // case (rdata_offset_q)
   end
 
@@ -279,37 +284,37 @@ module ibex_load_store_unit
     unique case (rdata_offset_q)
       2'b00: begin
         if (!data_sign_ext_q) begin
-          rdata_b_ext = {24'h00_0000, data_rdata_i[7:0]};
+          rdata_b_ext = {24'h00_0000, data_rdata_dec[7:0]};
         end else begin
-          rdata_b_ext = {{24{data_rdata_i[7]}}, data_rdata_i[7:0]};
+          rdata_b_ext = {{24{data_rdata_dec[7]}}, data_rdata_dec[7:0]};
         end
       end
 
       2'b01: begin
         if (!data_sign_ext_q) begin
-          rdata_b_ext = {24'h00_0000, data_rdata_i[15:8]};
+          rdata_b_ext = {24'h00_0000, data_rdata_dec[15:8]};
         end else begin
-          rdata_b_ext = {{24{data_rdata_i[15]}}, data_rdata_i[15:8]};
+          rdata_b_ext = {{24{data_rdata_dec[15]}}, data_rdata_dec[15:8]};
         end
       end
 
       2'b10: begin
         if (!data_sign_ext_q) begin
-          rdata_b_ext = {24'h00_0000, data_rdata_i[23:16]};
+          rdata_b_ext = {24'h00_0000, data_rdata_dec[23:16]};
         end else begin
-          rdata_b_ext = {{24{data_rdata_i[23]}}, data_rdata_i[23:16]};
+          rdata_b_ext = {{24{data_rdata_dec[23]}}, data_rdata_dec[23:16]};
         end
       end
 
       2'b11: begin
         if (!data_sign_ext_q) begin
-          rdata_b_ext = {24'h00_0000, data_rdata_i[31:24]};
+          rdata_b_ext = {24'h00_0000, data_rdata_dec[31:24]};
         end else begin
-          rdata_b_ext = {{24{data_rdata_i[31]}}, data_rdata_i[31:24]};
+          rdata_b_ext = {{24{data_rdata_dec[31]}}, data_rdata_dec[31:24]};
         end
       end
 
-      default: rdata_b_ext = {24'h00_0000, data_rdata_i[7:0]};
+      default: rdata_b_ext = {24'h00_0000, data_rdata_dec[7:0]};
     endcase // case (rdata_offset_q)
   end
 
@@ -485,7 +490,7 @@ module ibex_load_store_unit
 
   // output to data interface
   assign data_addr_o   = data_addr_w_aligned;
-  assign data_wdata_o  = data_wdata;
+  assign data_wdata_o  = (pmp_enc_data_i & data_we_o) ? (data_wdata ^ mem_enc_key_i) : data_wdata;
   assign data_we_o     = lsu_we_i;
   assign data_be_o     = data_be;
 

@@ -224,6 +224,7 @@ module ibex_core #(
   logic [33:0] csr_pmp_addr [PMPNumRegions];
   pmp_cfg_t    csr_pmp_cfg  [PMPNumRegions];
   logic        pmp_req_err  [PMP_NUM_CHAN];
+  logic        pmp_enc_data;
   logic        instr_req_out;
   logic        data_req_out;
 
@@ -300,6 +301,9 @@ module ibex_core #(
   logic [31:0] rvfi_mem_addr_d;
   logic [31:0] rvfi_mem_addr_q;
 `endif
+
+  // Security
+  logic [31:0] mem_enc_key;
 
   //////////////////////
   // Clock management //
@@ -601,6 +605,8 @@ module ibex_core #(
       .data_rvalid_i         ( data_rvalid_i       ),
       .data_err_i            ( data_err_i          ),
       .data_pmp_err_i        ( pmp_req_err[PMP_D]  ),
+      .pmp_enc_data_i        ( pmp_enc_data        ),
+      .mem_enc_key_i         ( mem_enc_key         ),  
 
       .data_addr_o           ( data_addr_o         ),
       .data_we_o             ( data_we_o           ),
@@ -837,7 +843,10 @@ module ibex_core #(
       .mem_store_i             ( perf_store               ),
       .dside_wait_i            ( perf_dside_wait          ),
       .mul_wait_i              ( perf_mul_wait            ),
-      .div_wait_i              ( perf_div_wait            )
+      .div_wait_i              ( perf_div_wait            ),
+
+      // Custom registers
+      .mem_enc_key_o           ( mem_enc_key              )
   );
 
   if (PMPEnable) begin : g_pmp
@@ -866,7 +875,8 @@ module ibex_core #(
         // Access checking channels
         .pmp_req_addr_i        ( pmp_req_addr   ),
         .pmp_req_type_i        ( pmp_req_type   ),
-        .pmp_req_err_o         ( pmp_req_err    )
+        .pmp_req_err_o         ( pmp_req_err    ),
+        .pmp_enc_data_o        ( pmp_enc_data   )
     );
   end else begin : g_no_pmp
     // Unused signal tieoff

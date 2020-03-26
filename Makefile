@@ -43,7 +43,7 @@ $(Vibex_simple_system):
 
 run-simple-system: sw-simple-hello | $(Vibex_simple_system)
 	build/lowrisc_ibex_ibex_simple_system_0/sim-verilator/Vibex_simple_system \
-		--raminit=$(simple-system-program)
+		--raminit=$(simple-system-program) -t
 
 
 # Arty A7 FPGA example

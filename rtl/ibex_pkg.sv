@@ -235,6 +235,8 @@ typedef enum logic [1:0] {
 
 typedef struct packed {
   logic          lock;
+  logic          reserved;
+  logic          encrypt;
   pmp_cfg_mode_e mode;
   logic          exec;
   logic          write;
@@ -296,6 +298,9 @@ typedef enum logic[11:0] {
   // Debug
   CSR_DSCRATCH0 = 12'h7b2, // optional
   CSR_DSCRATCH1 = 12'h7b3, // optional
+
+  // Custom Registers
+  CSR_MEMENCKEY = 12'h7c0,
 
   // Machine Counter/Timers
   CSR_MCOUNTINHIBIT  = 12'h320,
@@ -410,5 +415,10 @@ parameter int unsigned CSR_MTIX_BIT      = 7;
 parameter int unsigned CSR_MEIX_BIT      = 11;
 parameter int unsigned CSR_MFIX_BIT_LOW  = 16;
 parameter int unsigned CSR_MFIX_BIT_HIGH = 30;
+
+typedef struct packed {
+  logic          locked;
+  logic [31:0]   value;
+} locked_register_t;
 
 endpackage

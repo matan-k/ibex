@@ -99,7 +99,10 @@ module ibex_cs_registers #(
     input  logic                 mem_store_i,            // store to memory in this cycle
     input  logic                 dside_wait_i,           // core waiting for the dside
     input  logic                 mul_wait_i,             // core waiting for multiply
-    input  logic                 div_wait_i              // core waiting for divide
+    input  logic                 div_wait_i,              // core waiting for divide
+
+    // custom regs output
+    output logic [31:0]         mem_enc_key_o
 );
 
   import ibex_pkg::*;
@@ -213,6 +216,10 @@ module ibex_cs_registers #(
 
   logic [7:0]  unused_boot_addr;
   logic [2:0]  unused_csr_addr;
+
+  // Custom registers
+  locked_register_t mem_enc_key;
+  bit mem_enc_key_write_req;
 
   assign unused_boot_addr = boot_addr_i[7:0];
 
@@ -398,6 +405,10 @@ module ibex_cs_registers #(
         illegal_csr   = ~DbgTriggerEn;
       end
 
+      CSR_MEMENCKEY: begin
+        csr_rdata_int = mem_enc_key.value;
+      end
+
       default: begin
         illegal_csr = 1'b1;
       end
@@ -428,6 +439,9 @@ module ibex_cs_registers #(
     mcountinhibit_we = 1'b0;
     mhpmcounter_we   = '0;
     mhpmcounterh_we  = '0;
+
+    // Custom regs
+    mem_enc_key_write_req = '0;
 
     if (csr_we_int) begin
       unique case (csr_addr_i)
@@ -523,6 +537,11 @@ module ibex_cs_registers #(
         CSR_MHPMCOUNTER24H, CSR_MHPMCOUNTER25H, CSR_MHPMCOUNTER26H, CSR_MHPMCOUNTER27H,
         CSR_MHPMCOUNTER28H, CSR_MHPMCOUNTER29H, CSR_MHPMCOUNTER30H, CSR_MHPMCOUNTER31H: begin
           mhpmcounterh_we[mhpmcounter_idx] = 1'b1;
+        end
+
+        // custom regs
+        CSR_MEMENCKEY: begin
+          mem_enc_key_write_req = 1'b1;
         end
 
         default:;
@@ -717,7 +736,7 @@ module ibex_cs_registers #(
     for (genvar i = 0; i < PMP_MAX_REGIONS; i++) begin : g_exp_rd_data
       if (i < PMPNumRegions) begin : g_implemented_regions
         // Add in zero padding for reserved fields
-        assign pmp_cfg_rdata[i] = {pmp_cfg[i].lock, 2'b00, pmp_cfg[i].mode,
+        assign pmp_cfg_rdata[i] = {pmp_cfg[i].lock, 1'b00, pmp_cfg[i].encrypt, pmp_cfg[i].mode,
                                    pmp_cfg[i].exec, pmp_cfg[i].write, pmp_cfg[i].read};
 
         // Address field read data depends on the current programmed mode and the granularity
@@ -781,6 +800,7 @@ module ibex_cs_registers #(
       // W = 1, R = 0 is a reserved combination. For now, we force W to 0 if R == 0
       assign pmp_cfg_wdata[i].write = &csr_wdata_int[(i%4)*PMP_CFG_W+:2];
       assign pmp_cfg_wdata[i].read  = csr_wdata_int[(i%4)*PMP_CFG_W];
+      assign pmp_cfg_wdata[i].encrypt = csr_wdata_int[(i%4)*PMP_CFG_W+5];
 
       always_ff @(posedge clk_i or negedge rst_ni) begin
         if (!rst_ni) begin
@@ -1015,6 +1035,23 @@ module ibex_cs_registers #(
     assign tmatch_value_rdata   = 'b0;
     assign trigger_match_o      = 'b0;
   end
+
+
+  /////////////////
+  // Custom Regs //
+  /////////////////
+
+  // mem_enc_key
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+      mem_enc_key <= locked_register_t'('b0);
+    end else if (mem_enc_key_write_req && !mem_enc_key.locked) begin
+      mem_enc_key.locked <= 1'b1;
+      mem_enc_key.value <= csr_wdata_int;
+    end
+  end
+
+  assign mem_enc_key_o = mem_enc_key.value;
 
   ////////////////
   // Assertions //
