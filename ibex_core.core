@@ -32,6 +32,7 @@ filesets:
 #      - rtl/ibex_register_file_latch.sv # ASIC
 #      - rtl/ibex_register_file_fpga.sv # FPGA
       - rtl/ibex_register_file_ff.sv # generic FF-based
+      - rtl/ibex_shadow_stack.sv
       - rtl/ibex_core.sv
     file_type: systemVerilogSource
 

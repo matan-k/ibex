@@ -19,7 +19,8 @@ ibex:
     rtl/ibex_prefetch_buffer.sv,
     rtl/ibex_fetch_fifo.sv,
     rtl/ibex_pmp.sv,
-    rtl/ibex_core.sv,
+    rtl/ibex_shadow_stack.sv,
+    rtl/ibex_core.sv
   ]
 ibex_vip_rtl:
   targets: [
