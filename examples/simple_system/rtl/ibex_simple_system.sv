@@ -136,6 +136,7 @@ module ibex_simple_system (
   );
 
   ibex_core_tracing #(
+      .PMPEnable(1'b1),
       .MHPMCounterNum(29),
       .DmHaltAddr(32'h00100000),
       .DmExceptionAddr(32'h00100000),
