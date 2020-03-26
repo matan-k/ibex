@@ -910,12 +910,16 @@ module ibex_core #(
     .clk_i(clk_i),    // Clock
     .rst_ni(rst_ni),  // Asynchronous reset active low
 
-    .pointer_wr_i(alu_adder_result_ex),     // pointer to store in the stack. The value is taken from the ALU (1 clock after the detected instruction)
-    .pointer_rd_i(rf_rdata_a), // pointer to validate in the stack and remove. The value is taken from register 0x1 in the RF.
+    // pointer to store in the stack. The value is taken from the ALU
+    // (1 clock after the detected instruction)
+    .pointer_wr_i(alu_adder_result_ex),  
+
+    // pointer to validate in the stack and remove. 
+    //The value is taken from the selected register in the Register File.   
+    .pointer_rd_i(rf_rdata_a), 
     .write_indication_i(store_pointer_s),   // valid for pointer_wr_i 
     .read_indication_i(validate_pointer),   // valid for pointer_rd_i
-    .error_o(shadow_stack_error)
-
+    .error_o(shadow_stack_error)            // indicates illegal return        
   );
 
   // Sample the signals when they are valid.

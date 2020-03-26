@@ -224,7 +224,7 @@ module ibex_decoder #(
           // Check if it is not regular jump
           // Sample on first cycle, because otherwise it might be an instruction after a
           // branch that was not taken.
-          if(instr[`REG_D] == 1) begin
+          if(instr[`REG_D] != 5'b0) begin
             store_pointer_o    = 1'b1;
           end
         end else begin
@@ -244,9 +244,8 @@ module ibex_decoder #(
           // Only for function jumps (from reg 0x1).
           // Sample on first cycle, because otherwise it might be an instruction after a
           // branch that was not taken.
-          if(instr[`REG_S1] == 5'b1) begin
             validate_pointer_o = 1'b1;
-          end
+          // end
         end else begin
           // Calculate and store PC+4
           rf_we            = 1'b1;
