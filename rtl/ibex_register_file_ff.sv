@@ -11,8 +11,8 @@
  * targeting FPGA synthesis or Verilator simulation.
  */
 module ibex_register_file #(
-    parameter bit RV32E              = 0,
-    parameter int unsigned DataWidth = 32
+    parameter int unsigned DataWidth = 32,
+    parameter int unsigned AddrWidth = 5
 ) (
     // Clock and Reset
     input  logic                 clk_i,
@@ -36,8 +36,7 @@ module ibex_register_file #(
 
 );
 
-  localparam int unsigned ADDR_WIDTH = RV32E ? 4 : 5;
-  localparam int unsigned NUM_WORDS  = 2**ADDR_WIDTH;
+  localparam int unsigned NUM_WORDS  = 2**AddrWidth;
 
   logic [NUM_WORDS-1:0][DataWidth-1:0] rf_reg;
   logic [NUM_WORDS-1:1][DataWidth-1:0] rf_reg_tmp;
