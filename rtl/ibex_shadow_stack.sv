@@ -1,5 +1,6 @@
 module ibex_shadow_stack #(
-	parameter bit RV32E = 1'b0
+	parameter bit RV32E = 1'b0,
+	parameter int unsigned ADDR_WIDTH = 8
 )
 (
 	input clk_i,    // Clock
@@ -15,9 +16,10 @@ module ibex_shadow_stack #(
 
 import ibex_pkg::*;
 
-logic [4:0]  stack_top_addr;
-logic [4:0]  rf_waddr_wb;
-logic [4:0]  rf_raddr_a;
+
+logic [ADDR_WIDTH - 1:0]  stack_top_addr;
+logic [ADDR_WIDTH - 1:0]  rf_waddr_wb;
+logic [ADDR_WIDTH - 1:0]  rf_raddr_a;
 logic [31:0] rf_wdata_wb;
 logic [31:0] rf_rdata_a;
 logic 		 rf_we_wb;
@@ -71,8 +73,8 @@ end
 
 
 ibex_register_file #(
-      .RV32E(RV32E),
-      .DataWidth(32)
+      .DataWidth(32),
+      .AddrWidth(8)
   ) register_file_i (
       .clk_i        ( clk_i        ),
       .rst_ni       ( rst_ni       ),

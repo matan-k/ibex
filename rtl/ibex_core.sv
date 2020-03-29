@@ -97,6 +97,8 @@ module ibex_core #(
   import ibex_pkg::*;
 
   localparam int unsigned PMP_NUM_CHAN = 2;
+  localparam int unsigned REG_FILE_ADDR_WIDTH = RV32E ? 4 : 5;
+  localparam int unsigned SHADOW_STACK_REG_FILE_ADDR_WIDTH = 5;
 
   // IF/ID signals
   logic        instr_valid_id;
@@ -691,8 +693,8 @@ module ibex_core #(
   );
 
   ibex_register_file #(
-      .RV32E(RV32E),
-      .DataWidth(32)
+      .DataWidth(32),
+      .AddrWidth(REG_FILE_ADDR_WIDTH)
   ) register_file_i (
       .clk_i        ( clk_i        ),
       .rst_ni       ( rst_ni       ),
@@ -904,7 +906,8 @@ module ibex_core #(
   end
 
   ibex_shadow_stack #(
-    .RV32E(RV32E)  
+    .RV32E(RV32E),
+    .ADDR_WIDTH(SHADOW_STACK_REG_FILE_ADDR_WIDTH)  
   )
   shadow_stack_inst (
     .clk_i(clk_i),    // Clock
