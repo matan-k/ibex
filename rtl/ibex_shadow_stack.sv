@@ -74,7 +74,7 @@ end
 
 ibex_register_file #(
       .DataWidth(32),
-      .AddrWidth(8)
+      .AddrWidth(ADDR_WIDTH)
   ) register_file_i (
       .clk_i        ( clk_i        ),
       .rst_ni       ( rst_ni       ),

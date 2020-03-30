@@ -246,6 +246,10 @@ module ibex_decoder #(
           // branch that was not taken.
           if(instr[`REG_S1] == 5'b1) begin
             validate_pointer_o = 1'b1;
+
+          // For function pointers.
+          end else if (instr[`REG_D] == 5'b1) begin
+            store_pointer_o = 1'b1;
           end
           // end
         end else begin

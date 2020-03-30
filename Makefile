@@ -8,7 +8,7 @@ help:
 
 # Use a parallel run (make -j N) for a faster build
 build-all: build-riscv-compliance build-simple-system build-arty-100 \
-      build-csr-test run-coremark
+      build-csr-test run-coremark run-ueccdh
 
 
 # RISC-V compliance
@@ -48,6 +48,11 @@ run-simple-system: sw-simple-hello | $(Vibex_simple_system)
 run-coremark: 
 	make -C ./examples/sw/benchmarks/coremark/
 	build/lowrisc_ibex_ibex_simple_system_0/sim-verilator/Vibex_simple_system --meminit=ram,examples/sw/benchmarks/coremark/coremark.elf 
+
+ueccdh = examples/sw/micro-ecc/test_ecdh.vmem
+run-ueccdh:
+	cd examples/sw/micro-ecc/ && $(MAKE)
+	build/lowrisc_ibex_ibex_simple_system_0/sim-verilator/Vibex_simple_system --raminit=$(ueccdh)
 
 # Arty A7 FPGA example
 # Use the following targets (depending on your hardware):
