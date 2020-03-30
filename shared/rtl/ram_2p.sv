@@ -36,7 +36,7 @@ module ram_2p #(
 );
 
   localparam int Aw = $clog2(Depth);
-  localparam int DELAY = 4;
+  localparam int unsigned DELAY = 10; // Delay is clocks. Minimal delay is 1 clock.
 
   logic [31:0] mem [Depth];
 
@@ -51,15 +51,11 @@ module ram_2p #(
   assign unused_b_addr_parts = {b_addr_i[31:Aw+2], b_addr_i[1:0]};
 
   // simulates the latency in real RAMs
-  logic read_request;
-  logic write_request;
-  logic [9:0] time_left_counter;
-  logic a_we_s;
+  logic [31:0] time_left_counter;
 
   always @(posedge clk_i) begin
-    a_we_s <= a_we_i;
     if (a_req_i) begin
-      if (a_we_i == 1'b1 & a_we_s == 1'b0 ) begin
+      if (a_we_i == 1'b1) begin
         for (int i = 0; i < 4; i = i + 1) begin
           if (a_be_i[i] == 1'b1) begin
             mem[a_addr_idx][i*8 +: 8] <= a_wdata_i[i*8 +: 8];
@@ -87,20 +83,21 @@ module ram_2p #(
     if (!rst_ni) begin
       a_rvalid_o <= '0;
     end else begin
-      // a_rvalid_o <= a_req_i;
-        read_request <= a_req_i;
-        if(read_request) begin
-          time_left_counter <= DELAY; // Delay is DELAY cycles
-          a_rvalid_o <= 1'b0;
-        end else if(time_left_counter > 0) begin
-          time_left_counter <= time_left_counter - 1;
-          if(time_left_counter == 1) begin
-            a_rvalid_o <= 1'b1;
-          end
-        end else begin
-          a_rvalid_o <= 1'b0;
-        end
-    end
+
+      // Timer activation.
+      if(a_req_i) begin
+        time_left_counter <= DELAY - 1; // Delay is DELAY cycles
+      end else if(time_left_counter > 0) begin
+        time_left_counter <= time_left_counter - 1;
+      end
+
+      // Valid toggling
+      if(time_left_counter == 1 | (a_req_i & DELAY ==1)) begin
+        a_rvalid_o <= 1'b1;
+      end else begin
+        a_rvalid_o <= 1'b0;
+      end
+    end 
   end
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
