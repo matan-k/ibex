@@ -23,13 +23,16 @@ logic [ADDR_WIDTH - 1:0]  rf_raddr_a;
 logic [31:0] rf_wdata_wb;
 logic [31:0] rf_rdata_a;
 logic 		 rf_we_wb;
+logic        error_int;
 
 
-// Manages the stack top pointer
+// Manages the stack top pointer and error
 always_ff @(posedge clk_i or negedge rst_ni) begin
 	if(~rst_ni) begin
 		stack_top_addr <= 0;
+		error_o <= 1'b0;
 	end else begin
+		error_o <= error_int;
 		if(write_indication_i & stack_top_addr != '1) begin
 			stack_top_addr <= stack_top_addr + 1;
 		end else if(read_indication_i & stack_top_addr != 0) begin
@@ -45,7 +48,7 @@ assign rf_waddr_wb = stack_top_addr + 1;
 
 
 assign rf_we_wb = write_indication_i & stack_top_addr != '1;
-assign error_o = (write_indication_i & stack_top_addr == '1 ) | // error when the stack is full
+assign error_int = (write_indication_i & stack_top_addr == '1 ) | // error when the stack is full
 		(read_indication_i & (stack_top_addr == 0 |  // error when the stack is empty
 			(rf_rdata_a != pointer_rd_i))); // mismatch between expected address and actual one
 
