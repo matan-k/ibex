@@ -45,61 +45,66 @@ module ibex_pmp #(
   // ---------------
   // Access checking
   // ---------------
+  generate
+    genvar r;
+    genvar b;
+    genvar c;
 
-  for (genvar r = 0; r < PMPNumRegions; r++) begin : g_addr_exp
-    // Start address for TOR matching
-    if (r == 0) begin : g_entry0
-      assign region_start_addr[r] = (csr_pmp_cfg_i[r].mode == PMP_MODE_TOR) ? 34'h000000000 :
-                                                                              csr_pmp_addr_i[r];
-    end else begin : g_oth
-      assign region_start_addr[r] = (csr_pmp_cfg_i[r].mode == PMP_MODE_TOR) ? csr_pmp_addr_i[r-1] :
-                                                                              csr_pmp_addr_i[r];
-    end
-    // Address mask for NA matching
-    for (genvar b = PMPGranularity+2; b < 34; b++) begin : g_bitmask
-      if (b == PMPGranularity+2) begin : g_bit0
-        // Always mask bit (G+2) for NAPOT
-        assign region_addr_mask[r][b] = (csr_pmp_cfg_i[r].mode != PMP_MODE_NAPOT);
-      end else begin : g_others
-        // We will mask this bit if it is within the programmed granule
-        // i.e. addr = yyyy 0111
-        //                  ^
-        //                  | This bit pos is the top of the mask, all lower bits set
-        // thus mask = 1111 0000
-        assign region_addr_mask[r][b] = (csr_pmp_cfg_i[r].mode != PMP_MODE_NAPOT) |
-                                        ~&csr_pmp_addr_i[r][b-1:PMPGranularity+2];
+    for (r = 0; r < PMPNumRegions; r++) begin : g_addr_exp
+      // Start address for TOR matching
+      if (r == 0) begin : g_entry0
+        assign region_start_addr[r] = (csr_pmp_cfg_i[r].mode == PMP_MODE_TOR) ? 34'h000000000 :
+                                                                                csr_pmp_addr_i[r];
+      end else begin : g_oth
+        assign region_start_addr[r] = (csr_pmp_cfg_i[r].mode == PMP_MODE_TOR) ? csr_pmp_addr_i[r-1] :
+                                                                                csr_pmp_addr_i[r];
+      end
+      // Address mask for NA matching
+      for (b = PMPGranularity+2; b < 34; b++) begin : g_bitmask
+        if (b == PMPGranularity+2) begin : g_bit0
+          // Always mask bit (G+2) for NAPOT
+          assign region_addr_mask[r][b] = (csr_pmp_cfg_i[r].mode != PMP_MODE_NAPOT);
+        end else begin : g_others
+          // We will mask this bit if it is within the programmed granule
+          // i.e. addr = yyyy 0111
+          //                  ^
+          //                  | This bit pos is the top of the mask, all lower bits set
+          // thus mask = 1111 0000
+          assign region_addr_mask[r][b] = (csr_pmp_cfg_i[r].mode != PMP_MODE_NAPOT) |
+                                          ~&csr_pmp_addr_i[r][b-1:PMPGranularity+2];
+        end
       end
     end
-  end
 
-  for (genvar c = 0; c < PMPNumChan; c++) begin : g_access_check
-    for (genvar r = 0; r < PMPNumRegions; r++) begin : g_regions
-      // TOR Region high/low matching is reused for all match types
-      assign region_match_low[c][r]     = (pmp_req_addr_i[c][33:PMPGranularity+2] >=
-                                           // Comparators are sized according to granularity
-                                           (region_start_addr[r][33:PMPGranularity+2] &
-                                            region_addr_mask[r]));
-      assign region_match_high[c][r]    = (pmp_req_addr_i[c][33:PMPGranularity+2] <=
-                                           csr_pmp_addr_i[r][33:PMPGranularity+2]);
-      assign region_match_both[c][r]    = region_match_low[c][r] & region_match_high[c][r] &
-                                          (csr_pmp_cfg_i[r].mode != PMP_MODE_OFF);
-      // Check specific required permissions
-      assign region_perm_check[c][r] =
-          ((pmp_req_type_i[c] == PMP_ACC_EXEC)  & csr_pmp_cfg_i[r].exec) |
-          ((pmp_req_type_i[c] == PMP_ACC_WRITE) & csr_pmp_cfg_i[r].write) |
-          ((pmp_req_type_i[c] == PMP_ACC_READ)  & csr_pmp_cfg_i[r].read);
-      // In machine mode, any match to a locked region without sufficient permissions is a fault
-      assign machine_access_fault[c][r] = region_match_both[c][r] & csr_pmp_cfg_i[r].lock &
-                                          ~region_perm_check[c][r];
-      // In any other mode, any access should fault unless is matches a region
-      assign user_access_allowed[c][r]  = region_match_both[c][r] & region_perm_check[c][r];
-      assign pmp_enc_check[c][r]        = region_match_both[c][r] & csr_pmp_cfg_i[r].encrypt == 1'b1;
+    for (c = 0; c < PMPNumChan; c++) begin : g_access_check
+      for (r = 0; r < PMPNumRegions; r++) begin : g_regions
+        // TOR Region high/low matching is reused for all match types
+        assign region_match_low[c][r]     = (pmp_req_addr_i[c][33:PMPGranularity+2] >=
+                                             // Comparators are sized according to granularity
+                                             (region_start_addr[r][33:PMPGranularity+2] &
+                                              region_addr_mask[r]));
+        assign region_match_high[c][r]    = (pmp_req_addr_i[c][33:PMPGranularity+2] <=
+                                             csr_pmp_addr_i[r][33:PMPGranularity+2]);
+        assign region_match_both[c][r]    = region_match_low[c][r] & region_match_high[c][r] &
+                                            (csr_pmp_cfg_i[r].mode != PMP_MODE_OFF);
+        // Check specific required permissions
+        assign region_perm_check[c][r] =
+            ((pmp_req_type_i[c] == PMP_ACC_EXEC)  & csr_pmp_cfg_i[r].exec) |
+            ((pmp_req_type_i[c] == PMP_ACC_WRITE) & csr_pmp_cfg_i[r].write) |
+            ((pmp_req_type_i[c] == PMP_ACC_READ)  & csr_pmp_cfg_i[r].read);
+        // In machine mode, any match to a locked region without sufficient permissions is a fault
+        assign machine_access_fault[c][r] = region_match_both[c][r] & csr_pmp_cfg_i[r].lock &
+                                            ~region_perm_check[c][r];
+        // In any other mode, any access should fault unless is matches a region
+        assign user_access_allowed[c][r]  = region_match_both[c][r] & region_perm_check[c][r];
+        assign pmp_enc_check[c][r]        = region_match_both[c][r] & csr_pmp_cfg_i[r].encrypt == 1'b1;
+      end
+      assign access_fault[c] = (priv_mode_i[c] == PRIV_LVL_M) ? |machine_access_fault[c] :
+                                                                ~|user_access_allowed[c];
+
+      assign pmp_req_err_o[c] = access_fault[c];
     end
-    assign access_fault[c] = (priv_mode_i[c] == PRIV_LVL_M) ? |machine_access_fault[c] :
-                                                              ~|user_access_allowed[c];
-
-    assign pmp_req_err_o[c] = access_fault[c];
-  end
+  endgenerate
 
   // Assign Memory region encryption attirbute.
     assign pmp_enc_data_o = |pmp_enc_check;

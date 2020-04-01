@@ -61,35 +61,41 @@ module ibex_ex_block #(
     At synthesis time, all the combinational and sequential logic
     from the multdiv_i module are eliminated
   */
-  if (RV32M) begin : gen_multdiv_m
-    assign multdiv_en     = mult_en_i | div_en_i;
-  end else begin : gen_multdiv_no_m
-    assign multdiv_en     = 1'b0;
-  end
+  generate 
+    if (RV32M) begin : gen_multdiv_m
+      assign multdiv_en     = mult_en_i | div_en_i;
+    end else begin : gen_multdiv_no_m
+      assign multdiv_en     = 1'b0;
+    end
+  endgenerate
+
 
   assign result_ex_o = multdiv_en ? multdiv_result : alu_result;
 
   // branch handling
   assign branch_decision_o  = alu_cmp_result;
 
-  if (BranchTargetALU) begin : g_branch_target_alu
-    logic [32:0] bt_alu_result;
+  generate
+    if (BranchTargetALU) begin : g_branch_target_alu
+      logic [32:0] bt_alu_result;
 
-    assign bt_alu_result = {{19{bt_operand_imm_i[11]}}, bt_operand_imm_i, 1'b0} + pc_id_i;
+      assign bt_alu_result = {{19{bt_operand_imm_i[11]}}, bt_operand_imm_i, 1'b0} + pc_id_i;
 
-    assign jump_target_o = (jt_mux_sel_i == JT_ALU) ? alu_adder_result_ex_o : bt_alu_result[31:0];
-  end else begin : g_no_branch_target_alu
-    // Unused jt_mux_sel_i/bt_operand_imm_i/pc_id_i signals causes lint errors, this avoids them
-    ibex_pkg::jt_mux_sel_e unused_jt_mux_sel;
-    logic [11:0]           unused_bt_operand_imm;
-    logic [31:0]           unused_pc_id;
+      assign jump_target_o = (jt_mux_sel_i == JT_ALU) ? alu_adder_result_ex_o : bt_alu_result[31:0];
+    end else begin : g_no_branch_target_alu
+     // Unused jt_mux_sel_i/bt_operand_imm_i/pc_id_i signals causes lint errors, this avoids them
+      ibex_pkg::jt_mux_sel_e unused_jt_mux_sel;
+      logic [11:0]           unused_bt_operand_imm;
+      logic [31:0]           unused_pc_id;
 
-    assign unused_jt_mux_sel     = jt_mux_sel_i;
-    assign unused_bt_operand_imm = bt_operand_imm_i;
-    assign unused_pc_id          = pc_id_i;
+      assign unused_jt_mux_sel     = jt_mux_sel_i;
+      assign unused_bt_operand_imm = bt_operand_imm_i;
+      assign unused_pc_id          = pc_id_i;
 
-    assign jump_target_o = alu_adder_result_ex_o;
-  end
+      assign jump_target_o = alu_adder_result_ex_o;
+    end
+  endgenerate
+
 
   /////////
   // ALU //
@@ -112,69 +118,71 @@ module ibex_ex_block #(
   ////////////////
   // Multiplier //
   ////////////////
+  generate
+    if (MultiplierImplementation == "slow") begin : gen_multdiv_slow
+      ibex_multdiv_slow multdiv_i (
+          .clk_i              ( clk_i                 ),
+          .rst_ni             ( rst_ni                ),
+          .mult_en_i          ( mult_en_i             ),
+          .div_en_i           ( div_en_i              ),
+          .operator_i         ( multdiv_operator_i    ),
+          .signed_mode_i      ( multdiv_signed_mode_i ),
+          .op_a_i             ( multdiv_operand_a_i   ),
+          .op_b_i             ( multdiv_operand_b_i   ),
+          .alu_adder_ext_i    ( alu_adder_result_ext  ),
+          .alu_adder_i        ( alu_adder_result_ex_o ),
+          .equal_to_zero      ( alu_is_equal_result   ),
+          .valid_o            ( multdiv_valid         ),
+          .alu_operand_a_o    ( multdiv_alu_operand_a ),
+          .alu_operand_b_o    ( multdiv_alu_operand_b ),
+          .multdiv_ready_id_i ( multdiv_ready_id_i    ),
+          .multdiv_result_o   ( multdiv_result        )
+      );
+    end else if (MultiplierImplementation == "fast") begin : gen_multdiv_fast
+      ibex_multdiv_fast #(
+          .SingleCycleMultiply(0)
+      ) multdiv_i (
+          .clk_i              ( clk_i                 ),
+          .rst_ni             ( rst_ni                ),
+          .mult_en_i          ( mult_en_i             ),
+          .div_en_i           ( div_en_i              ),
+          .operator_i         ( multdiv_operator_i    ),
+          .signed_mode_i      ( multdiv_signed_mode_i ),
+          .op_a_i             ( multdiv_operand_a_i   ),
+          .op_b_i             ( multdiv_operand_b_i   ),
+          .alu_operand_a_o    ( multdiv_alu_operand_a ),
+          .alu_operand_b_o    ( multdiv_alu_operand_b ),
+          .alu_adder_ext_i    ( alu_adder_result_ext  ),
+          .alu_adder_i        ( alu_adder_result_ex_o ),
+          .equal_to_zero      ( alu_is_equal_result   ),
+          .multdiv_ready_id_i ( multdiv_ready_id_i    ),
+          .valid_o            ( multdiv_valid         ),
+          .multdiv_result_o   ( multdiv_result        )
+      );
+    end else if (MultiplierImplementation == "single-cycle") begin: gen_multdiv_single_cycle
+      ibex_multdiv_fast #(
+          .SingleCycleMultiply(1)
+      ) multdiv_i (
+          .clk_i              ( clk_i                 ),
+          .rst_ni             ( rst_ni                ),
+          .mult_en_i          ( mult_en_i             ),
+          .div_en_i           ( div_en_i              ),
+          .operator_i         ( multdiv_operator_i    ),
+          .signed_mode_i      ( multdiv_signed_mode_i ),
+          .op_a_i             ( multdiv_operand_a_i   ),
+          .op_b_i             ( multdiv_operand_b_i   ),
+          .alu_operand_a_o    ( multdiv_alu_operand_a ),
+          .alu_operand_b_o    ( multdiv_alu_operand_b ),
+          .alu_adder_ext_i    ( alu_adder_result_ext  ),
+          .alu_adder_i        ( alu_adder_result_ex_o ),
+          .equal_to_zero      ( alu_is_equal_result   ),
+          .multdiv_ready_id_i ( multdiv_ready_id_i    ),
+          .valid_o            ( multdiv_valid         ),
+          .multdiv_result_o   ( multdiv_result        )
+      );
+    end
+  endgenerate
 
-  if (MultiplierImplementation == "slow") begin : gen_multdiv_slow
-    ibex_multdiv_slow multdiv_i (
-        .clk_i              ( clk_i                 ),
-        .rst_ni             ( rst_ni                ),
-        .mult_en_i          ( mult_en_i             ),
-        .div_en_i           ( div_en_i              ),
-        .operator_i         ( multdiv_operator_i    ),
-        .signed_mode_i      ( multdiv_signed_mode_i ),
-        .op_a_i             ( multdiv_operand_a_i   ),
-        .op_b_i             ( multdiv_operand_b_i   ),
-        .alu_adder_ext_i    ( alu_adder_result_ext  ),
-        .alu_adder_i        ( alu_adder_result_ex_o ),
-        .equal_to_zero      ( alu_is_equal_result   ),
-        .valid_o            ( multdiv_valid         ),
-        .alu_operand_a_o    ( multdiv_alu_operand_a ),
-        .alu_operand_b_o    ( multdiv_alu_operand_b ),
-        .multdiv_ready_id_i ( multdiv_ready_id_i    ),
-        .multdiv_result_o   ( multdiv_result        )
-    );
-  end else if (MultiplierImplementation == "fast") begin : gen_multdiv_fast
-    ibex_multdiv_fast #(
-        .SingleCycleMultiply(0)
-    ) multdiv_i (
-        .clk_i              ( clk_i                 ),
-        .rst_ni             ( rst_ni                ),
-        .mult_en_i          ( mult_en_i             ),
-        .div_en_i           ( div_en_i              ),
-        .operator_i         ( multdiv_operator_i    ),
-        .signed_mode_i      ( multdiv_signed_mode_i ),
-        .op_a_i             ( multdiv_operand_a_i   ),
-        .op_b_i             ( multdiv_operand_b_i   ),
-        .alu_operand_a_o    ( multdiv_alu_operand_a ),
-        .alu_operand_b_o    ( multdiv_alu_operand_b ),
-        .alu_adder_ext_i    ( alu_adder_result_ext  ),
-        .alu_adder_i        ( alu_adder_result_ex_o ),
-        .equal_to_zero      ( alu_is_equal_result   ),
-        .multdiv_ready_id_i ( multdiv_ready_id_i    ),
-        .valid_o            ( multdiv_valid         ),
-        .multdiv_result_o   ( multdiv_result        )
-    );
-  end else if (MultiplierImplementation == "single-cycle") begin: gen_multdiv_single_cycle
-    ibex_multdiv_fast #(
-        .SingleCycleMultiply(1)
-    ) multdiv_i (
-        .clk_i              ( clk_i                 ),
-        .rst_ni             ( rst_ni                ),
-        .mult_en_i          ( mult_en_i             ),
-        .div_en_i           ( div_en_i              ),
-        .operator_i         ( multdiv_operator_i    ),
-        .signed_mode_i      ( multdiv_signed_mode_i ),
-        .op_a_i             ( multdiv_operand_a_i   ),
-        .op_b_i             ( multdiv_operand_b_i   ),
-        .alu_operand_a_o    ( multdiv_alu_operand_a ),
-        .alu_operand_b_o    ( multdiv_alu_operand_b ),
-        .alu_adder_ext_i    ( alu_adder_result_ext  ),
-        .alu_adder_i        ( alu_adder_result_ex_o ),
-        .equal_to_zero      ( alu_is_equal_result   ),
-        .multdiv_ready_id_i ( multdiv_ready_id_i    ),
-        .valid_o            ( multdiv_valid         ),
-        .multdiv_result_o   ( multdiv_result        )
-    );
-  end
 
   // ALU output valid in same cycle, multiplier/divider may require multiple cycles
   assign ex_valid_o = multdiv_en ? multdiv_valid : 1'b1;

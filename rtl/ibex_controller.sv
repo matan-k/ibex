@@ -7,7 +7,7 @@
  * Main controller of the processor
  */
 
-`include "prim_assert.sv"
+// `include "prim_assert.sv"
 
 module ibex_controller #(
     parameter bit WritebackStage = 0
@@ -212,18 +212,20 @@ module ibex_controller #(
   // special request that can specifically occur during branch instructions
   assign special_req_branch = (illegal_insn_d | instr_fetch_err) & (ctrl_fsm_cs != FLUSH);
 
-  `ASSERT(SpecialReqBranchGivesSpecialReqAll,
-    special_req_branch |-> special_req_all)
+  // `ASSERT(SpecialReqBranchGivesSpecialReqAll,
+    // special_req_branch |-> special_req_all)
+// 
+  // `ASSERT(SpecialReqAllGivesSpecialReqBranchIfBranchInst,
+    // special_req_all && (branch_set_i || jump_set_i) |-> special_req_branch)
 
-  `ASSERT(SpecialReqAllGivesSpecialReqBranchIfBranchInst,
-    special_req_all && (branch_set_i || jump_set_i) |-> special_req_branch)
-
-  if (WritebackStage) begin
-    // Instruction in writeback is generating an exception so instruction in ID must not execute
-    assign wb_exception_o = load_err_q | store_err_q | load_err_i | store_err_i;
-  end else begin
-    assign wb_exception_o = 1'b0;
-  end
+  generate  
+    if (WritebackStage) begin
+      // Instruction in writeback is generating an exception so instruction in ID must not execute
+      assign wb_exception_o = load_err_q | store_err_q | load_err_i | store_err_i;
+    end else begin
+      assign wb_exception_o = 1'b0;
+    end
+  endgenerate
 
   ////////////////
   // Interrupts //
@@ -714,9 +716,9 @@ module ibex_controller #(
   // Assertions //
   ////////////////
 
-  // Selectors must be known/valid.
-  `ASSERT(IbexCtrlStateValid, ctrl_fsm_cs inside {
-      RESET, BOOT_SET, WAIT_SLEEP, SLEEP, FIRST_FETCH, DECODE, FLUSH,
-      IRQ_TAKEN, DBG_TAKEN_IF, DBG_TAKEN_ID})
+  //// Selectors must be known/valid.
+  // `ASSERT(IbexCtrlStateValid, ctrl_fsm_cs inside {
+      // RESET, BOOT_SET, WAIT_SLEEP, SLEEP, FIRST_FETCH, DECODE, FLUSH,
+      // IRQ_TAKEN, DBG_TAKEN_IF, DBG_TAKEN_ID})
 
 endmodule

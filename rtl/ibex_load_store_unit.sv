@@ -11,7 +11,7 @@
  * and to align bytes and halfwords.
  */
 
-`include "prim_assert.sv"
+// `include "prim_assert.sv"
 
 module ibex_load_store_unit
 (
@@ -516,21 +516,21 @@ module ibex_load_store_unit
   assign unused_illegal_insn_id = illegal_insn_id_i;
 
   // Selectors must be known/valid.
-  `ASSERT(IbexDataTypeKnown, (instr_valid_id_i & ~illegal_insn_id_i) |-> !$isunknown(lsu_type_i))
-  `ASSERT(IbexDataOffsetKnown, (instr_valid_id_i & ~illegal_insn_id_i) |-> !$isunknown(data_offset))
-  `ASSERT_KNOWN(IbexRDataOffsetQKnown, rdata_offset_q)
-  `ASSERT_KNOWN(IbexDataTypeQKnown, data_type_q)
-  `ASSERT(IbexLsuStateValid, ls_fsm_cs inside {
-      IDLE, WAIT_GNT_MIS, WAIT_RVALID_MIS, WAIT_GNT,
-      WAIT_RVALID_MIS_GNTS_DONE})
+  // `ASSERT(IbexDataTypeKnown, (instr_valid_id_i & ~illegal_insn_id_i) |-> !$isunknown(lsu_type_i))
+  // `ASSERT(IbexDataOffsetKnown, (instr_valid_id_i & ~illegal_insn_id_i) |-> !$isunknown(data_offset))
+  // `ASSERT_KNOWN(IbexRDataOffsetQKnown, rdata_offset_q)
+  // `ASSERT_KNOWN(IbexDataTypeQKnown, data_type_q)
+  // `ASSERT(IbexLsuStateValid, ls_fsm_cs inside {
+  //     IDLE, WAIT_GNT_MIS, WAIT_RVALID_MIS, WAIT_GNT,
+  //     WAIT_RVALID_MIS_GNTS_DONE})
 
-  // Errors must only be sent together with rvalid.
-  `ASSERT(IbexDataErrWithoutRvalid, data_err_i |-> data_rvalid_i)
+  // // Errors must only be sent together with rvalid.
+  // `ASSERT(IbexDataErrWithoutRvalid, data_err_i |-> data_rvalid_i)
 
-  // Address must not contain X when request is sent.
-  `ASSERT(IbexDataAddrUnknown, data_req_o |-> !$isunknown(data_addr_o))
+  // // Address must not contain X when request is sent.
+  // `ASSERT(IbexDataAddrUnknown, data_req_o |-> !$isunknown(data_addr_o))
 
-  // Address must be word aligned when request is sent.
-  `ASSERT(IbexDataAddrUnaligned, data_req_o |-> (data_addr_o[1:0] == 2'b00))
+  // // Address must be word aligned when request is sent.
+  // `ASSERT(IbexDataAddrUnaligned, data_req_o |-> (data_addr_o[1:0] == 2'b00))
 
 endmodule

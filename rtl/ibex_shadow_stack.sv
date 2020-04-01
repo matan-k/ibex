@@ -39,37 +39,44 @@ always_ff @(posedge clk_i or negedge rst_ni) begin
 end
 
 // Manages read and writes from the internal register file.
-always_comb begin
-	if(write_indication_i) begin
+assign rf_raddr_a = stack_top_addr;
+assign rf_wdata_wb = pointer_wr_i;
+assign rf_waddr_wb = stack_top_addr + 1;
 
+
+assign rf_we_wb = write_indication_i & stack_top_addr != '1;
+assign error_o = (write_indication_i & stack_top_addr == '1 ) | // error when the stack is full
+		(read_indication_i & (stack_top_addr == 0 |  // error when the stack is empty
+			(rf_rdata_a != pointer_rd_i))); // mismatch between expected address and actual one
+
+// always_comb begin	
+	// if(write_indication_i) begin
+// 
 		// Check if the stack is full
-		if(stack_top_addr == '1) begin
-			error_o = 1'b1;
-		end else begin
-			rf_we_wb = 1'b1;
-			rf_wdata_wb = pointer_wr_i;
-			rf_waddr_wb = stack_top_addr + 1;
-		end
-
-	end else if(read_indication_i) begin
-
-		//	Check if the stack is empty
-		if(stack_top_addr == 0) begin
-			error_o = 1;
-		end else begin
-			rf_raddr_a = stack_top_addr;
-			if(rf_rdata_a != pointer_rd_i) begin
-				error_o = 1'b1;
-			end
-		end
-	end else begin
-		error_o     = 1'b0;
-		rf_raddr_a  = '0;
-		rf_we_wb    = 1'b0;
-		rf_wdata_wb = '0;
-		rf_waddr_wb = '0;
-	end
-end
+		// if(stack_top_addr == '1) begin
+			// error_o = 1'b1;
+			// rf_we_wb = 1'b0;
+		// end else begin
+			// rf_we_wb = 1'b1;
+			// error_o = 1'b0;
+		// end
+// 
+	// end else if(read_indication_i) begin
+		// rf_we_wb = 1'b0;
+// 
+			// Check if the stack is empty
+		// if(stack_top_addr == 0) begin
+			// error_o = 1'b1;
+		// end else begin
+			// if(rf_rdata_a != pointer_rd_i) begin
+				// error_o = 1'b1;
+			// end
+		// end
+	// end else begin
+		// error_o     = 1'b0;
+		// rf_we_wb    = 1'b0;
+	// end
+// end
 
 
 ibex_register_file #(

@@ -12,7 +12,7 @@
  * 16x16 kernel multiplier and Long Division
  */
 
-`include "prim_assert.sv"
+// `include "prim_assert.sv"
 
 module ibex_multdiv_fast #(
     parameter bit SingleCycleMultiply = 0
@@ -111,9 +111,9 @@ module ibex_multdiv_fast #(
     end
   end
 
-  `ASSERT_KNOWN(DivEnKnown, div_en_internal);
-  `ASSERT_KNOWN(MultEnKnown, mult_en_internal);
-  `ASSERT_KNOWN(MultDivEnKnown, multdiv_en);
+  // `ASSERT_KNOWN(DivEnKnown, div_en_internal);
+  // `ASSERT_KNOWN(MultEnKnown, mult_en_internal);
+  // `ASSERT_KNOWN(MultDivEnKnown, multdiv_en);
 
   assign multdiv_en = mult_en_internal | div_en_internal;
 
@@ -124,240 +124,242 @@ module ibex_multdiv_fast #(
 
   // The single cycle multiplier uses three 17 bit multipliers to compute MUL instructions in a
   // single cycle and MULH instructions in two cycles.
-  if (SingleCycleMultiply) begin : gen_multiv_single_cycle
+  generate
+    if (SingleCycleMultiply) begin : gen_multiv_single_cycle
 
-    typedef enum logic {
-      MULL, MULH
-    } mult_fsm_e;
-    mult_fsm_e mult_state_q, mult_state_d;
+      typedef enum logic {
+        MULL, MULH
+      } mult_fsm_e;
+      mult_fsm_e mult_state_q, mult_state_d;
 
-    logic signed [33:0] mult1_res, mult2_res, mult3_res;
-    logic [15:0]        mult1_op_a, mult1_op_b;
-    logic [15:0]        mult2_op_a, mult2_op_b;
-    logic [15:0]        mult3_op_a, mult3_op_b;
-    logic               mult1_sign_a, mult1_sign_b;
-    logic               mult2_sign_a, mult2_sign_b;
-    logic               mult3_sign_a, mult3_sign_b;
-    logic [33:0]        summand1, summand2, summand3;
+      logic signed [33:0] mult1_res, mult2_res, mult3_res;
+      logic [15:0]        mult1_op_a, mult1_op_b;
+      logic [15:0]        mult2_op_a, mult2_op_b;
+      logic [15:0]        mult3_op_a, mult3_op_b;
+      logic               mult1_sign_a, mult1_sign_b;
+      logic               mult2_sign_a, mult2_sign_b;
+      logic               mult3_sign_a, mult3_sign_b;
+      logic [33:0]        summand1, summand2, summand3;
 
-    assign mult1_res = $signed({mult1_sign_a, mult1_op_a}) * $signed({mult1_sign_b, mult1_op_b});
-    assign mult2_res = $signed({mult2_sign_a, mult2_op_a}) * $signed({mult2_sign_b, mult2_op_b});
-    assign mult3_res = $signed({mult3_sign_a, mult3_op_a}) * $signed({mult3_sign_b, mult3_op_b});
+      assign mult1_res = $signed({mult1_sign_a, mult1_op_a}) * $signed({mult1_sign_b, mult1_op_b});
+      assign mult2_res = $signed({mult2_sign_a, mult2_op_a}) * $signed({mult2_sign_b, mult2_op_b});
+      assign mult3_res = $signed({mult3_sign_a, mult3_op_a}) * $signed({mult3_sign_b, mult3_op_b});
 
-    assign mac_res_signed = $signed(summand1) + $signed(summand2) + $signed(summand3);
+      assign mac_res_signed = $signed(summand1) + $signed(summand2) + $signed(summand3);
 
-    assign mac_res_ext    = $unsigned(mac_res_signed);
-    assign mac_res        = mac_res_ext[33:0];
+      assign mac_res_ext    = $unsigned(mac_res_signed);
+      assign mac_res        = mac_res_ext[33:0];
 
-    assign sign_a = signed_mode_i[0] & op_a_i[31];
-    assign sign_b = signed_mode_i[1] & op_b_i[31];
+      assign sign_a = signed_mode_i[0] & op_a_i[31];
+      assign sign_b = signed_mode_i[1] & op_b_i[31];
 
-    // The first two multipliers are only used in state 1 (MULL). We can assign them statically.
-    // al*bl
-    assign mult1_sign_a = 1'b0;
-    assign mult1_sign_b = 1'b0;
-    assign mult1_op_a = op_a_i[`OP_L];
-    assign mult1_op_b = op_b_i[`OP_L];
+      // The first two multipliers are only used in state 1 (MULL). We can assign them statically.
+      // al*bl
+      assign mult1_sign_a = 1'b0;
+      assign mult1_sign_b = 1'b0;
+      assign mult1_op_a = op_a_i[`OP_L];
+      assign mult1_op_b = op_b_i[`OP_L];
 
-    // al*bh
-    assign mult2_sign_a = 1'b0;
-    assign mult2_sign_b = sign_b;
-    assign mult2_op_a = op_a_i[`OP_L];
-    assign mult2_op_b = op_b_i[`OP_H];
+      // al*bh
+      assign mult2_sign_a = 1'b0;
+      assign mult2_sign_b = sign_b;
+      assign mult2_op_a = op_a_i[`OP_L];
+      assign mult2_op_b = op_b_i[`OP_H];
 
-    // used in MULH
-    assign accum[17:0] = intermediate_val_q[33:16];
-    assign accum[33:18] = {16{signed_mult & intermediate_val_q[33]}};
+      // used in MULH
+      assign accum[17:0] = intermediate_val_q[33:16];
+      assign accum[33:18] = {16{signed_mult & intermediate_val_q[33]}};
 
-    always_comb begin
-      // Default values == MULL
+      always_comb begin
+        // Default values == MULL
 
-      // ah*bl
-      mult3_sign_a = sign_a;
-      mult3_sign_b = 1'b0;
-      mult3_op_a = op_a_i[`OP_H];
-      mult3_op_b = op_b_i[`OP_L];
+        // ah*bl
+        mult3_sign_a = sign_a;
+        mult3_sign_b = 1'b0;
+        mult3_op_a = op_a_i[`OP_H];
+        mult3_op_b = op_b_i[`OP_L];
 
-      summand1 = {18'h0, mult1_res[`OP_H]};
-      summand2 = mult2_res;
-      summand3 = mult3_res;
+        summand1 = {18'h0, mult1_res[`OP_H]};
+        summand2 = mult2_res;
+        summand3 = mult3_res;
 
-      // mac_res = A*B[47:16], mult1_res = A*B[15:0]
-      mac_res_d = {2'b0, mac_res[`OP_L], mult1_res[`OP_L]};
-      mult_valid = mult_en_i;
-      mult_state_d = MULL;
+        // mac_res = A*B[47:16], mult1_res = A*B[15:0]
+        mac_res_d = {2'b0, mac_res[`OP_L], mult1_res[`OP_L]};
+        mult_valid = mult_en_i;
+        mult_state_d = MULL;
 
-      mult_hold = 1'b0;
+        mult_hold = 1'b0;
 
-      unique case (mult_state_q)
+        unique case (mult_state_q)
 
-        MULL: begin
-          if (operator_i != MD_OP_MULL) begin
+          MULL: begin
+            if (operator_i != MD_OP_MULL) begin
+              mac_res_d = mac_res;
+              mult_valid = 1'b0;
+              mult_state_d = MULH;
+            end else begin
+              mult_hold = ~multdiv_ready_id_i;
+            end
+          end
+
+          MULH: begin
+            // ah*bh
+            mult3_sign_a = sign_a;
+            mult3_sign_b = sign_b;
+            mult3_op_a = op_a_i[`OP_H];
+            mult3_op_b = op_b_i[`OP_H];
             mac_res_d = mac_res;
-            mult_valid = 1'b0;
-            mult_state_d = MULH;
-          end else begin
+
+            summand1 = '0;
+            summand2 = accum;
+            summand3 = mult3_res;
+
+            mult_state_d = MULL;
+            mult_valid = 1'b1;
+
             mult_hold = ~multdiv_ready_id_i;
           end
-        end
 
-        MULH: begin
-          // ah*bh
-          mult3_sign_a = sign_a;
-          mult3_sign_b = sign_b;
-          mult3_op_a = op_a_i[`OP_H];
-          mult3_op_b = op_b_i[`OP_H];
-          mac_res_d = mac_res;
+          default: begin
+            mult_state_d = MULL;
+          end
 
-          summand1 = '0;
-          summand2 = accum;
-          summand3 = mult3_res;
+        endcase // mult_state_q
+      end
 
-          mult_state_d = MULL;
-          mult_valid = 1'b1;
-
-          mult_hold = ~multdiv_ready_id_i;
-        end
-
-        default: begin
-          mult_state_d = MULL;
-        end
-
-      endcase // mult_state_q
-    end
-
-    always_ff @(posedge clk_i or negedge rst_ni) begin
-      if (!rst_ni) begin
-        mult_state_q <= MULL;
-      end else begin
-        if (mult_en_i) begin
-          mult_state_q <= mult_state_d;
+      always_ff @(posedge clk_i or negedge rst_ni) begin
+        if (!rst_ni) begin
+          mult_state_q <= MULL;
+        end else begin
+          if (mult_en_i) begin
+            mult_state_q <= mult_state_d;
+          end
         end
       end
-    end
 
-    // States must be knwon/valid.
-    `ASSERT_KNOWN(IbexMultStateKnown, mult_state_q)
+      // States must be knwon/valid.
+      // `ASSERT_KNOWN(IbexMultStateKnown, mult_state_q)
 
-  // The fast multiplier uses one 17 bit multiplier to compute MUL instructions in 3 cycles
-  // and MULH instructions in 4 cycles.
-  end else begin : gen_multdiv_fast
-    logic [15:0] mult_op_a;
-    logic [15:0] mult_op_b;
+    // The fast multiplier uses one 17 bit multiplier to compute MUL instructions in 3 cycles
+    // and MULH instructions in 4 cycles.
+    end else begin : gen_multdiv_fast
+      logic [15:0] mult_op_a;
+      logic [15:0] mult_op_b;
 
-    typedef enum logic [1:0] {
-      ALBL, ALBH, AHBL, AHBH
-    } mult_fsm_e;
-    mult_fsm_e mult_state_q, mult_state_d;
+      typedef enum logic [1:0] {
+        ALBL, ALBH, AHBL, AHBH
+      } mult_fsm_e;
+      mult_fsm_e mult_state_q, mult_state_d;
 
-    // The 2 MSBs of mac_res_ext (mac_res_ext[34:33]) are always equal since:
-    // 1. The 2 MSBs of the multiplicants are always equal, and
-    // 2. The 16 MSBs of the addend (accum[33:18]) are always equal.
-    // Thus, it is safe to ignore mac_res_ext[34].
-    assign mac_res_signed =
-        $signed({sign_a, mult_op_a}) * $signed({sign_b, mult_op_b}) + $signed(accum);
-    assign mac_res_ext    = $unsigned(mac_res_signed);
-    assign mac_res        = mac_res_ext[33:0];
+      // The 2 MSBs of mac_res_ext (mac_res_ext[34:33]) are always equal since:
+      // 1. The 2 MSBs of the multiplicants are always equal, and
+      // 2. The 16 MSBs of the addend (accum[33:18]) are always equal.
+      // Thus, it is safe to ignore mac_res_ext[34].
+      assign mac_res_signed =
+          $signed({sign_a, mult_op_a}) * $signed({sign_b, mult_op_b}) + $signed(accum);
+      assign mac_res_ext    = $unsigned(mac_res_signed);
+      assign mac_res        = mac_res_ext[33:0];
 
-    always_comb begin
-      mult_op_a    = op_a_i[`OP_L];
-      mult_op_b    = op_b_i[`OP_L];
-      sign_a       = 1'b0;
-      sign_b       = 1'b0;
-      accum        = intermediate_val_q;
-      mac_res_d    = mac_res;
-      mult_state_d = mult_state_q;
-      mult_valid   = 1'b0;
-      mult_hold    = 1'b0;
+      always_comb begin
+        mult_op_a    = op_a_i[`OP_L];
+        mult_op_b    = op_b_i[`OP_L];
+        sign_a       = 1'b0;
+        sign_b       = 1'b0;
+        accum        = intermediate_val_q;
+        mac_res_d    = mac_res;
+        mult_state_d = mult_state_q;
+        mult_valid   = 1'b0;
+        mult_hold    = 1'b0;
 
-      unique case (mult_state_q)
+        unique case (mult_state_q)
 
-        ALBL: begin
-          // al*bl
-          mult_op_a = op_a_i[`OP_L];
-          mult_op_b = op_b_i[`OP_L];
-          sign_a    = 1'b0;
-          sign_b    = 1'b0;
-          accum     = '0;
-          mac_res_d = mac_res;
-          mult_state_d = ALBH;
-        end
-
-        ALBH: begin
-          // al*bh<<16
-          mult_op_a = op_a_i[`OP_L];
-          mult_op_b = op_b_i[`OP_H];
-          sign_a    = 1'b0;
-          sign_b    = signed_mode_i[1] & op_b_i[31];
-          // result of AL*BL (in intermediate_val_q) always unsigned with no carry, so carries_q always 00
-          accum     = {18'b0, intermediate_val_q[31:16]};
-          if (operator_i == MD_OP_MULL) begin
-            mac_res_d = {2'b0, mac_res[`OP_L], intermediate_val_q[`OP_L]};
-          end else begin
-            // MD_OP_MULH
+          ALBL: begin
+            // al*bl
+            mult_op_a = op_a_i[`OP_L];
+            mult_op_b = op_b_i[`OP_L];
+            sign_a    = 1'b0;
+            sign_b    = 1'b0;
+            accum     = '0;
             mac_res_d = mac_res;
+            mult_state_d = ALBH;
           end
-          mult_state_d = AHBL;
-        end
 
-        AHBL: begin
-          // ah*bl<<16
-          mult_op_a = op_a_i[`OP_H];
-          mult_op_b = op_b_i[`OP_L];
-          sign_a    = signed_mode_i[0] & op_a_i[31];
-          sign_b    = 1'b0;
-          if (operator_i == MD_OP_MULL) begin
-            accum        = {18'b0, intermediate_val_q[31:16]};
-            mac_res_d    = {2'b0, mac_res[15:0], intermediate_val_q[15:0]};
+          ALBH: begin
+            // al*bh<<16
+            mult_op_a = op_a_i[`OP_L];
+            mult_op_b = op_b_i[`OP_H];
+            sign_a    = 1'b0;
+            sign_b    = signed_mode_i[1] & op_b_i[31];
+            // result of AL*BL (in intermediate_val_q) always unsigned with no carry, so carries_q always 00
+            accum     = {18'b0, intermediate_val_q[31:16]};
+            if (operator_i == MD_OP_MULL) begin
+              mac_res_d = {2'b0, mac_res[`OP_L], intermediate_val_q[`OP_L]};
+            end else begin
+              // MD_OP_MULH
+              mac_res_d = mac_res;
+            end
+            mult_state_d = AHBL;
+          end
+
+          AHBL: begin
+            // ah*bl<<16
+            mult_op_a = op_a_i[`OP_H];
+            mult_op_b = op_b_i[`OP_L];
+            sign_a    = signed_mode_i[0] & op_a_i[31];
+            sign_b    = 1'b0;
+            if (operator_i == MD_OP_MULL) begin
+              accum        = {18'b0, intermediate_val_q[31:16]};
+              mac_res_d    = {2'b0, mac_res[15:0], intermediate_val_q[15:0]};
+              mult_valid   = 1'b1;
+
+              // Note no state transition will occur if mult_hold is set
+              mult_state_d = ALBL;
+              mult_hold    = ~multdiv_ready_id_i;
+            end else begin
+              accum        = intermediate_val_q;
+              mac_res_d    = mac_res;
+              mult_state_d = AHBH;
+            end
+          end
+
+          AHBH: begin
+            // only MD_OP_MULH here
+            // ah*bh
+            mult_op_a = op_a_i[`OP_H];
+            mult_op_b = op_b_i[`OP_H];
+            sign_a    = signed_mode_i[0] & op_a_i[31];
+            sign_b    = signed_mode_i[1] & op_b_i[31];
+            accum[17: 0]  = intermediate_val_q[33:16];
+            accum[33:18]  = {16{signed_mult & intermediate_val_q[33]}};
+            // result of AH*BL is not signed only if signed_mode_i == 2'b00
+            mac_res_d    = mac_res;
             mult_valid   = 1'b1;
 
             // Note no state transition will occur if mult_hold is set
             mult_state_d = ALBL;
             mult_hold    = ~multdiv_ready_id_i;
-          end else begin
-            accum        = intermediate_val_q;
-            mac_res_d    = mac_res;
-            mult_state_d = AHBH;
+          end
+          default: begin
+            mult_state_d = ALBL;
+          end
+        endcase // mult_state_q
+      end
+
+      always_ff @(posedge clk_i or negedge rst_ni) begin
+        if (!rst_ni) begin
+          mult_state_q <= ALBL;
+        end else begin
+          if (mult_en_internal) begin
+            mult_state_q <= mult_state_d;
           end
         end
-
-        AHBH: begin
-          // only MD_OP_MULH here
-          // ah*bh
-          mult_op_a = op_a_i[`OP_H];
-          mult_op_b = op_b_i[`OP_H];
-          sign_a    = signed_mode_i[0] & op_a_i[31];
-          sign_b    = signed_mode_i[1] & op_b_i[31];
-          accum[17: 0]  = intermediate_val_q[33:16];
-          accum[33:18]  = {16{signed_mult & intermediate_val_q[33]}};
-          // result of AH*BL is not signed only if signed_mode_i == 2'b00
-          mac_res_d    = mac_res;
-          mult_valid   = 1'b1;
-
-          // Note no state transition will occur if mult_hold is set
-          mult_state_d = ALBL;
-          mult_hold    = ~multdiv_ready_id_i;
-        end
-        default: begin
-          mult_state_d = ALBL;
-        end
-      endcase // mult_state_q
-    end
-
-    always_ff @(posedge clk_i or negedge rst_ni) begin
-      if (!rst_ni) begin
-        mult_state_q <= ALBL;
-      end else begin
-        if (mult_en_internal) begin
-          mult_state_q <= mult_state_d;
-        end
       end
-    end
 
-    // States must be knwon/valid.
-    `ASSERT_KNOWN(IbexMultStateKnown, mult_state_q)
+      // States must be knwon/valid.
+      // `ASSERT_KNOWN(IbexMultStateKnown, mult_state_q)
 
-  end // gen_multdiv_fast
+    end // gen_multdiv_fast
+  endgenerate
 
   // Divider
   assign res_adder_h    = alu_adder_ext_i[33:1];
@@ -494,7 +496,7 @@ module ibex_multdiv_fast #(
   assign valid_o = mult_valid | div_valid;
 
   // States must be knwon/valid.
-  `ASSERT(IbexMultDivStateValid, md_state_q inside {
-      MD_IDLE, MD_ABS_A, MD_ABS_B, MD_COMP, MD_LAST, MD_CHANGE_SIGN, MD_FINISH})
+  // `ASSERT(IbexMultDivStateValid, md_state_q inside {
+  //     MD_IDLE, MD_ABS_A, MD_ABS_B, MD_COMP, MD_LAST, MD_CHANGE_SIGN, MD_FINISH})
 
 endmodule // ibex_mult

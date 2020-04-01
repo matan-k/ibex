@@ -14,7 +14,7 @@
  * file.
  */
 
-`include "prim_assert.sv"
+// `include "prim_assert.sv"
 
 module ibex_id_stage #(
     parameter bit RV32E           = 0,
@@ -537,13 +537,15 @@ module ibex_id_stage #(
   assign alu_operand_a_ex_o          = alu_operand_a;
   assign alu_operand_b_ex_o          = alu_operand_b;
 
-  if (BranchTargetALU) begin : g_bt_operand_imm
-    // Branch target ALU sign-extends and inserts bottom 0 bit so only want the
-    // 'raw' B-type immediate bits.
-    assign bt_operand_imm_o = imm_b_type[12:1];
-  end else begin : g_no_bt_operand_imm
-    assign bt_operand_imm_o = '0;
-  end
+  generate
+    if (BranchTargetALU) begin : g_bt_operand_imm
+      // Branch target ALU sign-extends and inserts bottom 0 bit so only want the
+      // 'raw' B-type immediate bits.
+      assign bt_operand_imm_o = imm_b_type[12:1];
+    end else begin : g_no_bt_operand_imm
+      assign bt_operand_imm_o = '0;
+    end
+  endgenerate
 
   assign mult_en_ex_o                = mult_en_id;
   assign div_en_ex_o                 = div_en_id;
@@ -560,31 +562,32 @@ module ibex_id_stage #(
   /////////////////////////////
   // ID-EX Pipeline Register //
   /////////////////////////////
+  generate
+    if (BranchTargetALU) begin : g_branch_set_direct
+      // Branch set fed straight to controller with branch target ALU
+      // (condition pass/fail used same cycle as generated instruction request)
+      assign branch_set = branch_set_d;
+    end else begin : g_branch_set_flopped
+      // Branch set flopped without branch target ALU
+      // (condition pass/fail used next cycle where branch target is calculated)
+      logic branch_set_q;
 
-  if (BranchTargetALU) begin : g_branch_set_direct
-    // Branch set fed straight to controller with branch target ALU
-    // (condition pass/fail used same cycle as generated instruction request)
-    assign branch_set = branch_set_d;
-  end else begin : g_branch_set_flopped
-    // Branch set flopped without branch target ALU
-    // (condition pass/fail used next cycle where branch target is calculated)
-    logic branch_set_q;
-
-    always_ff @(posedge clk_i or negedge rst_ni) begin
-      if (!rst_ni) begin
-        branch_set_q <= 1'b0;
-      end else begin
-        branch_set_q <= branch_set_d;
+      always_ff @(posedge clk_i or negedge rst_ni) begin
+        if (!rst_ni) begin
+          branch_set_q <= 1'b0;
+        end else begin
+          branch_set_q <= branch_set_d;
+        end
       end
-    end
 
-    assign branch_set = branch_set_q;
-  end
+      assign branch_set = branch_set_q;
+    end
+  endgenerate
 
   // Holding branch_set/jump_set high for more than one cycle may not cause a functional issue but
   // could generate needless prefetch buffer flushes and instruction fetches. ID/EX is designed such
   // that this shouldn't ever happen.
-  `ASSERT(NeverDoubleBranch, branch_set |=> ~branch_set)
+  // `ASSERT(NeverDoubleBranch, branch_set |=> ~branch_set)
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : id_pipeline_reg
     if (!rst_ni) begin
@@ -678,177 +681,180 @@ module ibex_id_stage #(
   // Note for the two-stage configuration ready_wb_i is always set
   assign multdiv_ready_id_o = ready_wb_i;
 
-  `ASSERT(StallIDIfMulticycle, (id_fsm_q == FIRST_CYCLE) & (id_fsm_d == MULTI_CYCLE) |-> stall_id)
+  // `ASSERT(StallIDIfMulticycle, (id_fsm_q == FIRST_CYCLE) & (id_fsm_d == MULTI_CYCLE) |-> stall_id)
 
   // Stall ID/EX stage for reason that relates to instruction in ID/EX
   assign stall_id = stall_ld_hz | stall_mem | stall_multdiv | stall_jump | stall_branch;
 
   assign instr_done = ~stall_id & ~flush_id & instr_executing;
 
-  if (WritebackStage) begin
-    assign multicycle_done = lsu_req_dec ? ~stall_mem : ex_valid_i;
-  end else begin
-    assign multicycle_done = lsu_req_dec ? lsu_valid_i : ex_valid_i;
-  end
-
+  generate
+    if (WritebackStage) begin
+      assign multicycle_done = lsu_req_dec ? ~stall_mem : ex_valid_i;
+    end else begin
+      assign multicycle_done = lsu_req_dec ? lsu_valid_i : ex_valid_i;
+    end
+  endgenerate
   // Signal instruction in ID is in it's first cycle. It can remain in its
   // first cycle if it is stalled.
   assign instr_first_cycle      = instr_valid_i & (id_fsm_q == FIRST_CYCLE);
   // Used by RVFI to know when to capture register read data
   assign instr_first_cycle_id_o = instr_first_cycle;
 
-  if (WritebackStage) begin : gen_stall_mem
-    // Register read address matches write address in WB
-    logic rf_rd_a_wb_match;
-    logic rf_rd_b_wb_match;
-    // Hazard between registers being read and written
-    logic rf_rd_a_hz;
-    logic rf_rd_b_hz;
+  generate
+    if (WritebackStage) begin : gen_stall_mem
+      // Register read address matches write address in WB
+      logic rf_rd_a_wb_match;
+      logic rf_rd_b_wb_match;
+      // Hazard between registers being read and written
+      logic rf_rd_a_hz;
+      logic rf_rd_b_hz;
 
-    logic data_req_complete_d;
-    logic data_req_complete_q;
+      logic data_req_complete_d;
+      logic data_req_complete_q;
 
-    logic outstanding_memory_access;
+      logic outstanding_memory_access;
 
-    logic instr_kill;
+      logic instr_kill;
 
-    assign data_req_complete_d =
-      (data_req_complete_q | (lsu_req & lsu_req_done_i)) & ~instr_id_done_o;
+      assign data_req_complete_d =
+        (data_req_complete_q | (lsu_req & lsu_req_done_i)) & ~instr_id_done_o;
 
-    always_ff @(posedge clk_i or negedge rst_ni) begin
-      if (~rst_ni) begin
-        data_req_complete_q   <= 1'b0;
-      end else begin
-        data_req_complete_q   <= data_req_complete_d;
+      always_ff @(posedge clk_i or negedge rst_ni) begin
+        if (~rst_ni) begin
+          data_req_complete_q   <= 1'b0;
+        end else begin
+          data_req_complete_q   <= data_req_complete_d;
+        end
       end
+
+      // Is a memory access ongoing that isn't finishing this cycle
+      assign outstanding_memory_access = (outstanding_load_wb_i | outstanding_store_wb_i) &
+                                         ~lsu_valid_i;
+
+      // Can start a new memory access if any previous one has finished or is finishing
+      // Don't start a new memory access if this instruction has already done it's request
+      assign data_req_allowed = ~outstanding_memory_access & ~data_req_complete_q;
+
+      // Instruction won't execute because:
+      // - There is a pending exception in writeback
+      //   The instruction in ID/EX will be flushed and the core will jump to an exception handler
+      // - The controller isn't running instructions
+      //   This either happens in preparation for a flush and jump to an exception handler e.g. in
+      //   response to an IRQ or debug request or whilst the core is sleeping or resetting/fetching
+      //   first instruction in which case any valid instruction in ID/EX should be ignored.
+      // - There was an error on instruction fetch
+      assign instr_kill = instr_fetch_err_i |
+                          wb_exception      |
+                          ~controller_run;
+
+      // With writeback stage instructions must be prevented from executing if there is:
+      // - A load hazard
+      // - A pending memory access
+      //   If it receives an error response this results in a precise exception from WB so ID/EX
+      //   instruction must not execute until error response is known).
+      // - A load/store error
+      //   This will cause a precise exception for the instruction in WB so ID/EX instruction must not
+      //   execute
+      assign instr_executing = instr_valid_i              &
+                               ~instr_kill                &
+                               ~stall_ld_hz               &
+                               ~outstanding_memory_access;
+
+      // `ASSERT(IbexStallIfValidInstrNotExecuting,
+      //   instr_valid_i & ~instr_kill & ~instr_executing |-> stall_id)
+
+      // Stall for reasons related to memory:
+      // * Requested by LSU (load/store in ID/EX needs to be held in ID/EX whilst a data request or
+      //   granted or the second half of a misaligned access is sent out)
+      // * LSU access required but data requests aren't currently allowed
+      // * There is an outstanding memory access that won't resolve this cycle (need to wait to allow
+      //   precise exceptions)
+      assign stall_mem = instr_valid_i & ((lsu_req_dec & (~data_req_allowed | (~data_req_complete_q & ~lsu_req_done_i))) | outstanding_memory_access);
+
+      assign rf_rd_a_wb_match = (rf_waddr_wb_i == rf_raddr_a_o) & |rf_raddr_a_o;
+      assign rf_rd_b_wb_match = (rf_waddr_wb_i == rf_raddr_b_o) & |rf_raddr_b_o;
+
+      // If instruction is reading register that load will be writing stall in
+      // ID until load is complete. No need to stall when reading zero register.
+      assign rf_rd_a_hz = rf_rd_a_wb_match & rf_ren_a;
+      assign rf_rd_b_hz = rf_rd_b_wb_match & rf_ren_b;
+
+      // If instruction is read register that writeback is writing forward writeback data to read
+      // data. Note this doesn't factor in load data as it arrives too late, such hazards are
+      // resolved via a stall (see above).
+      assign rf_rdata_a_fwd = rf_rd_a_wb_match & rf_write_wb_i ? rf_wdata_fwd_wb_i : rf_rdata_a_i;
+      assign rf_rdata_b_fwd = rf_rd_b_wb_match & rf_write_wb_i ? rf_wdata_fwd_wb_i : rf_rdata_b_i;
+
+      assign stall_ld_hz = outstanding_load_wb_i & lsu_load_i & (rf_rd_a_hz | rf_rd_b_hz) & rf_write_wb_i;
+
+      assign instr_type_wb_o = ~lsu_req_dec ? WB_INSTR_OTHER :
+                                lsu_we      ? WB_INSTR_STORE :
+                                              WB_INSTR_LOAD;
+
+      assign en_wb_o = instr_done;
+
+      assign instr_id_done_o = en_wb_o & ready_wb_i;
+
+      // Stall ID/EX as instruction in ID/EX cannot proceed to writeback yet
+      assign stall_wb = en_wb_o & ~ready_wb_i;
+
+      assign perf_dside_wait_o = instr_valid_i & ~instr_kill & (outstanding_memory_access | stall_ld_hz);
+    end else begin
+
+      assign data_req_allowed = instr_first_cycle;
+
+      // Without Writeback Stage always stall the first cycle of a load/store.
+      // Then stall until it is complete
+      assign stall_mem = instr_valid_i & (lsu_busy_i | (lsu_req_dec & (~lsu_valid_i | instr_first_cycle)));
+
+      // No load hazards without Writeback Stage
+      assign stall_ld_hz = 1'b0;
+
+      // Without writeback stage any valid instruction that hasn't seen an error will execute
+      assign instr_executing = instr_valid_i & ~instr_fetch_err_i & controller_run;
+
+      // `ASSERT(IbexStallIfValidInstrNotExecuting,
+      //   instr_valid_i & ~instr_fetch_err_i & ~instr_executing & controller_run |-> stall_id)
+
+      // No data forwarding without writeback stage so always take source register data direct from
+      // register file
+      assign rf_rdata_a_fwd = rf_rdata_a_i;
+      assign rf_rdata_b_fwd = rf_rdata_b_i;
+
+      // Unused Writeback stage only IO & wiring
+      // Assign inputs and internal wiring to unused signals to satisfy lint checks
+      // Tie-off outputs to constant values
+      logic unused_data_req_done_ex;
+      logic unused_lsu_load;
+      logic [4:0] unused_rf_waddr_wb;
+      logic unused_rf_write_wb;
+      logic unused_outstanding_load_wb;
+      logic unused_outstanding_store_wb;
+      logic unused_wb_exception;
+      logic unused_rf_ren_a, unused_rf_ren_b;
+      logic [31:0] unused_rf_wdata_fwd_wb;
+
+      assign unused_data_req_done_ex     = lsu_req_done_i;
+      assign unused_lsu_load             = lsu_load_i;
+      assign unused_rf_waddr_wb          = rf_waddr_wb_i;
+      assign unused_rf_write_wb          = rf_write_wb_i;
+      assign unused_outstanding_load_wb  = outstanding_load_wb_i;
+      assign unused_outstanding_store_wb = outstanding_store_wb_i;
+      assign unused_wb_exception         = wb_exception;
+      assign unused_rf_ren_a             = rf_ren_a;
+      assign unused_rf_ren_b             = rf_ren_b;
+      assign unused_rf_wdata_fwd_wb      = rf_wdata_fwd_wb_i;
+
+      assign instr_type_wb_o = WB_INSTR_OTHER;
+      assign stall_wb        = 1'b0;
+
+      assign perf_dside_wait_o = instr_executing & lsu_req_dec & ~lsu_valid_i;
+
+      assign en_wb_o         = 1'b0;
+      assign instr_id_done_o = instr_done;
     end
-
-    // Is a memory access ongoing that isn't finishing this cycle
-    assign outstanding_memory_access = (outstanding_load_wb_i | outstanding_store_wb_i) &
-                                       ~lsu_valid_i;
-
-    // Can start a new memory access if any previous one has finished or is finishing
-    // Don't start a new memory access if this instruction has already done it's request
-    assign data_req_allowed = ~outstanding_memory_access & ~data_req_complete_q;
-
-    // Instruction won't execute because:
-    // - There is a pending exception in writeback
-    //   The instruction in ID/EX will be flushed and the core will jump to an exception handler
-    // - The controller isn't running instructions
-    //   This either happens in preparation for a flush and jump to an exception handler e.g. in
-    //   response to an IRQ or debug request or whilst the core is sleeping or resetting/fetching
-    //   first instruction in which case any valid instruction in ID/EX should be ignored.
-    // - There was an error on instruction fetch
-    assign instr_kill = instr_fetch_err_i |
-                        wb_exception      |
-                        ~controller_run;
-
-    // With writeback stage instructions must be prevented from executing if there is:
-    // - A load hazard
-    // - A pending memory access
-    //   If it receives an error response this results in a precise exception from WB so ID/EX
-    //   instruction must not execute until error response is known).
-    // - A load/store error
-    //   This will cause a precise exception for the instruction in WB so ID/EX instruction must not
-    //   execute
-    assign instr_executing = instr_valid_i              &
-                             ~instr_kill                &
-                             ~stall_ld_hz               &
-                             ~outstanding_memory_access;
-
-    `ASSERT(IbexStallIfValidInstrNotExecuting,
-      instr_valid_i & ~instr_kill & ~instr_executing |-> stall_id)
-
-    // Stall for reasons related to memory:
-    // * Requested by LSU (load/store in ID/EX needs to be held in ID/EX whilst a data request or
-    //   granted or the second half of a misaligned access is sent out)
-    // * LSU access required but data requests aren't currently allowed
-    // * There is an outstanding memory access that won't resolve this cycle (need to wait to allow
-    //   precise exceptions)
-    assign stall_mem = instr_valid_i & ((lsu_req_dec & (~data_req_allowed | (~data_req_complete_q & ~lsu_req_done_i))) | outstanding_memory_access);
-
-    assign rf_rd_a_wb_match = (rf_waddr_wb_i == rf_raddr_a_o) & |rf_raddr_a_o;
-    assign rf_rd_b_wb_match = (rf_waddr_wb_i == rf_raddr_b_o) & |rf_raddr_b_o;
-
-    // If instruction is reading register that load will be writing stall in
-    // ID until load is complete. No need to stall when reading zero register.
-    assign rf_rd_a_hz = rf_rd_a_wb_match & rf_ren_a;
-    assign rf_rd_b_hz = rf_rd_b_wb_match & rf_ren_b;
-
-    // If instruction is read register that writeback is writing forward writeback data to read
-    // data. Note this doesn't factor in load data as it arrives too late, such hazards are
-    // resolved via a stall (see above).
-    assign rf_rdata_a_fwd = rf_rd_a_wb_match & rf_write_wb_i ? rf_wdata_fwd_wb_i : rf_rdata_a_i;
-    assign rf_rdata_b_fwd = rf_rd_b_wb_match & rf_write_wb_i ? rf_wdata_fwd_wb_i : rf_rdata_b_i;
-
-    assign stall_ld_hz = outstanding_load_wb_i & lsu_load_i & (rf_rd_a_hz | rf_rd_b_hz) & rf_write_wb_i;
-
-    assign instr_type_wb_o = ~lsu_req_dec ? WB_INSTR_OTHER :
-                              lsu_we      ? WB_INSTR_STORE :
-                                            WB_INSTR_LOAD;
-
-    assign en_wb_o = instr_done;
-
-    assign instr_id_done_o = en_wb_o & ready_wb_i;
-
-    // Stall ID/EX as instruction in ID/EX cannot proceed to writeback yet
-    assign stall_wb = en_wb_o & ~ready_wb_i;
-
-    assign perf_dside_wait_o = instr_valid_i & ~instr_kill & (outstanding_memory_access | stall_ld_hz);
-  end else begin
-
-    assign data_req_allowed = instr_first_cycle;
-
-    // Without Writeback Stage always stall the first cycle of a load/store.
-    // Then stall until it is complete
-    assign stall_mem = instr_valid_i & (lsu_busy_i | (lsu_req_dec & (~lsu_valid_i | instr_first_cycle)));
-
-    // No load hazards without Writeback Stage
-    assign stall_ld_hz = 1'b0;
-
-    // Without writeback stage any valid instruction that hasn't seen an error will execute
-    assign instr_executing = instr_valid_i & ~instr_fetch_err_i & controller_run;
-
-    `ASSERT(IbexStallIfValidInstrNotExecuting,
-      instr_valid_i & ~instr_fetch_err_i & ~instr_executing & controller_run |-> stall_id)
-
-    // No data forwarding without writeback stage so always take source register data direct from
-    // register file
-    assign rf_rdata_a_fwd = rf_rdata_a_i;
-    assign rf_rdata_b_fwd = rf_rdata_b_i;
-
-    // Unused Writeback stage only IO & wiring
-    // Assign inputs and internal wiring to unused signals to satisfy lint checks
-    // Tie-off outputs to constant values
-    logic unused_data_req_done_ex;
-    logic unused_lsu_load;
-    logic [4:0] unused_rf_waddr_wb;
-    logic unused_rf_write_wb;
-    logic unused_outstanding_load_wb;
-    logic unused_outstanding_store_wb;
-    logic unused_wb_exception;
-    logic unused_rf_ren_a, unused_rf_ren_b;
-    logic [31:0] unused_rf_wdata_fwd_wb;
-
-    assign unused_data_req_done_ex     = lsu_req_done_i;
-    assign unused_lsu_load             = lsu_load_i;
-    assign unused_rf_waddr_wb          = rf_waddr_wb_i;
-    assign unused_rf_write_wb          = rf_write_wb_i;
-    assign unused_outstanding_load_wb  = outstanding_load_wb_i;
-    assign unused_outstanding_store_wb = outstanding_store_wb_i;
-    assign unused_wb_exception         = wb_exception;
-    assign unused_rf_ren_a             = rf_ren_a;
-    assign unused_rf_ren_b             = rf_ren_b;
-    assign unused_rf_wdata_fwd_wb      = rf_wdata_fwd_wb_i;
-
-    assign instr_type_wb_o = WB_INSTR_OTHER;
-    assign stall_wb        = 1'b0;
-
-    assign perf_dside_wait_o = instr_executing & lsu_req_dec & ~lsu_valid_i;
-
-    assign en_wb_o         = 1'b0;
-    assign instr_id_done_o = instr_done;
-  end
+  endgenerate
 
   assign perf_mul_wait_o = stall_multdiv & mult_en_dec;
   assign perf_div_wait_o = stall_multdiv & div_en_dec;
@@ -860,42 +866,42 @@ module ibex_id_stage #(
   ////////////////
 
   // Selectors must be known/valid.
-  `ASSERT_KNOWN(IbexAluOpMuxSelKnown, alu_op_a_mux_sel, clk_i, !rst_ni)
-  `ASSERT(IbexImmBMuxSelValid, imm_b_mux_sel inside {
-      IMM_B_I,
-      IMM_B_S,
-      IMM_B_B,
-      IMM_B_U,
-      IMM_B_J,
-      IMM_B_INCR_PC,
-      IMM_B_INCR_ADDR})
-  `ASSERT(IbexRegfileWdataSelValid, rf_wdata_sel inside {
-      RF_WD_EX,
-      RF_WD_CSR})
-  `ASSERT_KNOWN(IbexWbStateKnown, id_fsm_q)
+  // `ASSERT_KNOWN(IbexAluOpMuxSelKnown, alu_op_a_mux_sel, clk_i, !rst_ni)
+  // `ASSERT(IbexImmBMuxSelValid, imm_b_mux_sel inside {
+  //     IMM_B_I,
+  //     IMM_B_S,
+  //     IMM_B_B,
+  //     IMM_B_U,
+  //     IMM_B_J,
+  //     IMM_B_INCR_PC,
+  //     IMM_B_INCR_ADDR})
+  // `ASSERT(IbexRegfileWdataSelValid, rf_wdata_sel inside {
+  //     RF_WD_EX,
+  //     RF_WD_CSR})
+  // `ASSERT_KNOWN(IbexWbStateKnown, id_fsm_q)
 
-  // Branch decision must be valid when jumping.
-  `ASSERT(IbexBranchDecisionValid, branch_in_dec |-> !$isunknown(branch_decision_i))
+  // // Branch decision must be valid when jumping.
+  // `ASSERT(IbexBranchDecisionValid, branch_in_dec |-> !$isunknown(branch_decision_i))
 
-  // Instruction delivered to ID stage can not contain X.
-  `ASSERT(IbexIdInstrKnown,
-      (instr_valid_i && !(illegal_c_insn_i || instr_fetch_err_i)) |-> !$isunknown(instr_rdata_i))
+  // // Instruction delivered to ID stage can not contain X.
+  // `ASSERT(IbexIdInstrKnown,
+  //     (instr_valid_i && !(illegal_c_insn_i || instr_fetch_err_i)) |-> !$isunknown(instr_rdata_i))
 
-  // Instruction delivered to ID stage can not contain X.
-  `ASSERT(IbexIdInstrALUKnown,
-      (instr_valid_i && !(illegal_c_insn_i || instr_fetch_err_i)) |-> !$isunknown(instr_rdata_alu_i))
+  // // Instruction delivered to ID stage can not contain X.
+  // `ASSERT(IbexIdInstrALUKnown,
+  //     (instr_valid_i && !(illegal_c_insn_i || instr_fetch_err_i)) |-> !$isunknown(instr_rdata_alu_i))
 
-  // Multicycle enable signals must be unique.
-  `ASSERT(IbexMulticycleEnableUnique,
-      $onehot0({lsu_req_dec, multdiv_en_dec, branch_in_dec, jump_in_dec}))
+  // // Multicycle enable signals must be unique.
+  // `ASSERT(IbexMulticycleEnableUnique,
+  //     $onehot0({lsu_req_dec, multdiv_en_dec, branch_in_dec, jump_in_dec}))
 
-  // Duplicated instruction flops must match
-  // === as DV environment can produce instructions with Xs in, so must use precise match that
-  // includes Xs
-  `ASSERT(IbexDuplicateInstrMatch, instr_valid_i |-> instr_rdata_i === instr_rdata_alu_i)
+  // // Duplicated instruction flops must match
+  // // === as DV environment can produce instructions with Xs in, so must use precise match that
+  // // includes Xs
+  // `ASSERT(IbexDuplicateInstrMatch, instr_valid_i |-> instr_rdata_i === instr_rdata_alu_i)
 
-  `ifdef CHECK_MISALIGNED
-  `ASSERT(IbexMisalignedMemoryAccess, !lsu_addr_incr_req_i)
-  `endif
+  // `ifdef CHECK_MISALIGNED
+  // `ASSERT(IbexMisalignedMemoryAccess, !lsu_addr_incr_req_i)
+  // `endif
 
 endmodule

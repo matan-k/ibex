@@ -861,49 +861,51 @@ module ibex_core #(
       .mem_enc_key_o           ( mem_enc_key              )
   );
 
-  if (PMPEnable) begin : g_pmp
-    logic [33:0] pmp_req_addr [PMP_NUM_CHAN];
-    pmp_req_e    pmp_req_type [PMP_NUM_CHAN];
-    priv_lvl_e   pmp_priv_lvl [PMP_NUM_CHAN];
-
-    assign pmp_req_addr[PMP_I] = {2'b00,instr_addr_o[31:0]};
-    assign pmp_req_type[PMP_I] = PMP_ACC_EXEC;
-    assign pmp_priv_lvl[PMP_I] = priv_mode_if;
-    assign pmp_req_addr[PMP_D] = {2'b00,data_addr_o[31:0]};
-    assign pmp_req_type[PMP_D] = data_we_o ? PMP_ACC_WRITE : PMP_ACC_READ;
-    assign pmp_priv_lvl[PMP_D] = priv_mode_lsu;
-
-    ibex_pmp #(
-        .PMPGranularity        ( PMPGranularity ),
-        .PMPNumChan            ( PMP_NUM_CHAN   ),
-        .PMPNumRegions         ( PMPNumRegions  )
-    ) pmp_i (
-        .clk_i                 ( clk            ),
-        .rst_ni                ( rst_ni         ),
-        // Interface to CSRs
-        .csr_pmp_cfg_i         ( csr_pmp_cfg    ),
-        .csr_pmp_addr_i        ( csr_pmp_addr   ),
-        .priv_mode_i           ( pmp_priv_lvl   ),
-        // Access checking channels
-        .pmp_req_addr_i        ( pmp_req_addr   ),
-        .pmp_req_type_i        ( pmp_req_type   ),
-        .pmp_req_err_o         ( pmp_req_err    ),
-        .pmp_enc_data_o        ( pmp_enc_data   )
-    );
-  end else begin : g_no_pmp
-    // Unused signal tieoff
-    priv_lvl_e unused_priv_lvl_if, unused_priv_lvl_ls;
-    logic [33:0] unused_csr_pmp_addr [PMPNumRegions];
-    pmp_cfg_t    unused_csr_pmp_cfg  [PMPNumRegions];
-    assign unused_priv_lvl_if = priv_mode_if;
-    assign unused_priv_lvl_ls = priv_mode_lsu;
-    assign unused_csr_pmp_addr = csr_pmp_addr;
-    assign unused_csr_pmp_cfg = csr_pmp_cfg;
-
-    // Output tieoff
-    assign pmp_req_err[PMP_I] = 1'b0;
-    assign pmp_req_err[PMP_D] = 1'b0;
-  end
+  generate
+    if (PMPEnable) begin : g_pmp
+      logic [33:0] pmp_req_addr [PMP_NUM_CHAN];
+      pmp_req_e    pmp_req_type [PMP_NUM_CHAN];
+      priv_lvl_e   pmp_priv_lvl [PMP_NUM_CHAN];
+  
+      assign pmp_req_addr[PMP_I] = {2'b00,instr_addr_o[31:0]};
+      assign pmp_req_type[PMP_I] = PMP_ACC_EXEC;
+      assign pmp_priv_lvl[PMP_I] = priv_mode_if;
+      assign pmp_req_addr[PMP_D] = {2'b00,data_addr_o[31:0]};
+      assign pmp_req_type[PMP_D] = data_we_o ? PMP_ACC_WRITE : PMP_ACC_READ;
+      assign pmp_priv_lvl[PMP_D] = priv_mode_lsu;
+  
+      ibex_pmp #(
+          .PMPGranularity        ( PMPGranularity ),
+          .PMPNumChan            ( PMP_NUM_CHAN   ),
+          .PMPNumRegions         ( PMPNumRegions  )
+      ) pmp_i (
+          .clk_i                 ( clk            ),
+          .rst_ni                ( rst_ni         ),
+          // Interface to CSRs
+          .csr_pmp_cfg_i         ( csr_pmp_cfg    ),
+          .csr_pmp_addr_i        ( csr_pmp_addr   ),
+          .priv_mode_i           ( pmp_priv_lvl   ),
+          // Access checking channels
+          .pmp_req_addr_i        ( pmp_req_addr   ),
+          .pmp_req_type_i        ( pmp_req_type   ),
+          .pmp_req_err_o         ( pmp_req_err    ),
+          .pmp_enc_data_o        ( pmp_enc_data   )
+      );
+    end else begin : g_no_pmp
+      // Unused signal tieoff
+      priv_lvl_e unused_priv_lvl_if, unused_priv_lvl_ls;
+      logic [33:0] unused_csr_pmp_addr [PMPNumRegions];
+      pmp_cfg_t    unused_csr_pmp_cfg  [PMPNumRegions];
+      assign unused_priv_lvl_if = priv_mode_if;
+      assign unused_priv_lvl_ls = priv_mode_lsu;
+      assign unused_csr_pmp_addr = csr_pmp_addr;
+      assign unused_csr_pmp_cfg = csr_pmp_cfg;
+  
+      // Output tieoff
+      assign pmp_req_err[PMP_I] = 1'b0;
+      assign pmp_req_err[PMP_D] = 1'b0;
+    end
+  endgenerate
 
   ibex_shadow_stack #(
     .RV32E(RV32E),

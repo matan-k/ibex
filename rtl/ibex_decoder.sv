@@ -15,7 +15,7 @@
  * assertions only.
  */
 
-`include "prim_assert.sv"
+// `include "prim_assert.sv"
 
 module ibex_decoder #(
     parameter bit RV32E           = 0,
@@ -145,13 +145,16 @@ module ibex_decoder #(
   ////////////////////
   // Register check //
   ////////////////////
-  if (RV32E) begin : gen_rv32e_reg_check_active
-    assign illegal_reg_rv32e = ((rf_raddr_a_o[4] & (alu_op_a_mux_sel_o == OP_A_REG_A)) |
-                                (rf_raddr_b_o[4] & (alu_op_b_mux_sel_o == OP_B_REG_B)) |
-                                (rf_waddr_o[4]   & rf_we));
-  end else begin : gen_rv32e_reg_check_inactive
-    assign illegal_reg_rv32e = 1'b0;
-  end
+  generate
+    if (RV32E) begin : gen_rv32e_reg_check_active
+      assign illegal_reg_rv32e = ((rf_raddr_a_o[4] & (alu_op_a_mux_sel_o == OP_A_REG_A)) |
+                                  (rf_raddr_b_o[4] & (alu_op_b_mux_sel_o == OP_B_REG_B)) |
+                                  (rf_waddr_o[4]   & rf_we));
+    end else begin : gen_rv32e_reg_check_inactive
+      assign illegal_reg_rv32e = 1'b0;
+    end
+  endgenerate
+
 
   ///////////////////////
   // CSR operand check //
@@ -820,6 +823,6 @@ module ibex_decoder #(
   ////////////////
 
   // Selectors must be known/valid.
-  `ASSERT(IbexRegImmAluOpKnown, (opcode == OPCODE_OP_IMM) |->
-      !$isunknown(instr[14:12]))
+  // `ASSERT(IbexRegImmAluOpKnown, (opcode == OPCODE_OP_IMM) |->
+      // !$isunknown(instr[14:12]))
 endmodule // controller

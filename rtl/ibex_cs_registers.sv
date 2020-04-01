@@ -10,7 +10,7 @@
  * Specification, draft version 1.11
  */
 
-`include "prim_assert.sv"
+// `include "prim_assert.sv"
 
 module ibex_cs_registers #(
     parameter bit          DbgTriggerEn     = 0,
@@ -724,126 +724,131 @@ module ibex_cs_registers #(
   // -----------------
   // PMP registers
   // -----------------
+  generate
+    if (PMPEnable) begin : g_pmp_registers
+      pmp_cfg_t                    pmp_cfg         [PMPNumRegions];
+      pmp_cfg_t                    pmp_cfg_wdata   [PMPNumRegions];
+      logic [31:0]                 pmp_addr        [PMPNumRegions];
+      logic [PMPNumRegions-1:0]    pmp_cfg_we;
+      logic [PMPNumRegions-1:0]    pmp_addr_we;
 
-  if (PMPEnable) begin : g_pmp_registers
-    pmp_cfg_t                    pmp_cfg         [PMPNumRegions];
-    pmp_cfg_t                    pmp_cfg_wdata   [PMPNumRegions];
-    logic [31:0]                 pmp_addr        [PMPNumRegions];
-    logic [PMPNumRegions-1:0]    pmp_cfg_we;
-    logic [PMPNumRegions-1:0]    pmp_addr_we;
+      // Expanded / qualified register read data
+      genvar i;
+      for (i = 0; i < PMP_MAX_REGIONS; i++) begin : g_exp_rd_data
+        if (i < PMPNumRegions) begin : g_implemented_regions
+          // Add in zero padding for reserved fields
+          assign pmp_cfg_rdata[i] = {pmp_cfg[i].lock, 1'b00, pmp_cfg[i].encrypt, pmp_cfg[i].mode,
+                                     pmp_cfg[i].exec, pmp_cfg[i].write, pmp_cfg[i].read};
 
-    // Expanded / qualified register read data
-    for (genvar i = 0; i < PMP_MAX_REGIONS; i++) begin : g_exp_rd_data
-      if (i < PMPNumRegions) begin : g_implemented_regions
-        // Add in zero padding for reserved fields
-        assign pmp_cfg_rdata[i] = {pmp_cfg[i].lock, 1'b00, pmp_cfg[i].encrypt, pmp_cfg[i].mode,
-                                   pmp_cfg[i].exec, pmp_cfg[i].write, pmp_cfg[i].read};
+          // Address field read data depends on the current programmed mode and the granularity
+          // See RISC-V Privileged Specification, version 1.11, Section 3.6.1
+          if (PMPGranularity == 0) begin : g_pmp_g0
+            // If G == 0, read data is unmodified
+            assign pmp_addr_rdata[i] = pmp_addr[i];
 
-        // Address field read data depends on the current programmed mode and the granularity
-        // See RISC-V Privileged Specification, version 1.11, Section 3.6.1
-        if (PMPGranularity == 0) begin : g_pmp_g0
-          // If G == 0, read data is unmodified
-          assign pmp_addr_rdata[i] = pmp_addr[i];
+          end else if (PMPGranularity == 1) begin : g_pmp_g1
+            // If G == 1, bit [G-1] reads as zero in TOR or OFF mode
+            always_comb begin
+              pmp_addr_rdata[i] = pmp_addr[i];
+              if ((pmp_cfg[i].mode == PMP_MODE_OFF) || (pmp_cfg[i].mode == PMP_MODE_TOR)) begin
+                pmp_addr_rdata[i][PMPGranularity-1:0] = '0;
+              end
+            end
 
-        end else if (PMPGranularity == 1) begin : g_pmp_g1
-          // If G == 1, bit [G-1] reads as zero in TOR or OFF mode
-          always_comb begin
-            pmp_addr_rdata[i] = pmp_addr[i];
-            if ((pmp_cfg[i].mode == PMP_MODE_OFF) || (pmp_cfg[i].mode == PMP_MODE_TOR)) begin
-              pmp_addr_rdata[i][PMPGranularity-1:0] = '0;
+          end else begin : g_pmp_g2
+            // For G >= 2, bits are masked to one or zero depending on the mode
+            always_comb begin
+              pmp_addr_rdata[i] = pmp_addr[i];
+              if ((pmp_cfg[i].mode == PMP_MODE_OFF) || (pmp_cfg[i].mode == PMP_MODE_TOR)) begin
+                // In TOR or OFF mode, bits [G-1:0] must read as zero
+                pmp_addr_rdata[i][PMPGranularity-1:0] = '0;
+              end else if (pmp_cfg[i].mode == PMP_MODE_NAPOT) begin
+                // In NAPOT mode, bits [G-2:0] must read as one
+                pmp_addr_rdata[i][PMPGranularity-2:0] = '1;
+              end
             end
           end
 
-        end else begin : g_pmp_g2
-          // For G >= 2, bits are masked to one or zero depending on the mode
-          always_comb begin
-            pmp_addr_rdata[i] = pmp_addr[i];
-            if ((pmp_cfg[i].mode == PMP_MODE_OFF) || (pmp_cfg[i].mode == PMP_MODE_TOR)) begin
-              // In TOR or OFF mode, bits [G-1:0] must read as zero
-              pmp_addr_rdata[i][PMPGranularity-1:0] = '0;
-            end else if (pmp_cfg[i].mode == PMP_MODE_NAPOT) begin
-              // In NAPOT mode, bits [G-2:0] must read as one
-              pmp_addr_rdata[i][PMPGranularity-2:0] = '1;
-            end
+        end else begin : g_other_regions
+          // Non-implemented regions read as zero
+          assign pmp_cfg_rdata[i]  = '0;
+          assign pmp_addr_rdata[i] = '0;
+        end
+      end
+
+      // Write data calculation
+      genvar j;
+      for (j = 0; j < PMPNumRegions; j++) begin : g_pmp_csrs
+        // -------------------------
+        // Instantiate cfg registers
+        // -------------------------
+        assign pmp_cfg_we[j] = csr_we_int & ~pmp_cfg[j].lock &
+                               (csr_addr == (CSR_OFF_PMP_CFG + (j[11:0] >> 2)));
+
+        // Select the correct WDATA (each CSR contains 4 CFG fields, each with 2 RES bits)
+        assign pmp_cfg_wdata[j].lock  = csr_wdata_int[(j%4)*PMP_CFG_W+7];
+        // NA4 mode is not selectable when G > 0, mode is treated as OFF
+        always_comb begin
+          unique case (csr_wdata_int[(j%4)*PMP_CFG_W+3+:2])
+            2'b00   : pmp_cfg_wdata[j].mode = PMP_MODE_OFF;
+            2'b01   : pmp_cfg_wdata[j].mode = PMP_MODE_TOR;
+            2'b10   : pmp_cfg_wdata[j].mode = (PMPGranularity == 0) ? PMP_MODE_NA4:
+                                                                      PMP_MODE_OFF;
+            2'b11   : pmp_cfg_wdata[j].mode = PMP_MODE_NAPOT;
+            default : pmp_cfg_wdata[j].mode = PMP_MODE_OFF;
+          endcase
+        end
+        assign pmp_cfg_wdata[j].exec  = csr_wdata_int[(j%4)*PMP_CFG_W+2];
+        // W = 1, R = 0 is a reserved combination. For now, we force W to 0 if R == 0
+        assign pmp_cfg_wdata[j].write = &csr_wdata_int[(j%4)*PMP_CFG_W+:2];
+        assign pmp_cfg_wdata[j].read  = csr_wdata_int[(j%4)*PMP_CFG_W];
+        assign pmp_cfg_wdata[j].encrypt = csr_wdata_int[(j%4)*PMP_CFG_W+5];
+
+        always_ff @(posedge clk_i or negedge rst_ni) begin
+          if (!rst_ni) begin
+            pmp_cfg[j] <= pmp_cfg_t'('b0);
+          end else if (pmp_cfg_we[j]) begin
+            pmp_cfg[j] <= pmp_cfg_wdata[j];
           end
         end
 
-      end else begin : g_other_regions
-        // Non-implemented regions read as zero
-        assign pmp_cfg_rdata[i]  = '0;
-        assign pmp_addr_rdata[i] = '0;
-      end
-    end
-
-    // Write data calculation
-    for (genvar i = 0; i < PMPNumRegions; i++) begin : g_pmp_csrs
-      // -------------------------
-      // Instantiate cfg registers
-      // -------------------------
-      assign pmp_cfg_we[i] = csr_we_int & ~pmp_cfg[i].lock &
-                             (csr_addr == (CSR_OFF_PMP_CFG + (i[11:0] >> 2)));
-
-      // Select the correct WDATA (each CSR contains 4 CFG fields, each with 2 RES bits)
-      assign pmp_cfg_wdata[i].lock  = csr_wdata_int[(i%4)*PMP_CFG_W+7];
-      // NA4 mode is not selectable when G > 0, mode is treated as OFF
-      always_comb begin
-        unique case (csr_wdata_int[(i%4)*PMP_CFG_W+3+:2])
-          2'b00   : pmp_cfg_wdata[i].mode = PMP_MODE_OFF;
-          2'b01   : pmp_cfg_wdata[i].mode = PMP_MODE_TOR;
-          2'b10   : pmp_cfg_wdata[i].mode = (PMPGranularity == 0) ? PMP_MODE_NA4:
-                                                                    PMP_MODE_OFF;
-          2'b11   : pmp_cfg_wdata[i].mode = PMP_MODE_NAPOT;
-          default : pmp_cfg_wdata[i].mode = PMP_MODE_OFF;
-        endcase
-      end
-      assign pmp_cfg_wdata[i].exec  = csr_wdata_int[(i%4)*PMP_CFG_W+2];
-      // W = 1, R = 0 is a reserved combination. For now, we force W to 0 if R == 0
-      assign pmp_cfg_wdata[i].write = &csr_wdata_int[(i%4)*PMP_CFG_W+:2];
-      assign pmp_cfg_wdata[i].read  = csr_wdata_int[(i%4)*PMP_CFG_W];
-      assign pmp_cfg_wdata[i].encrypt = csr_wdata_int[(i%4)*PMP_CFG_W+5];
-
-      always_ff @(posedge clk_i or negedge rst_ni) begin
-        if (!rst_ni) begin
-          pmp_cfg[i] <= pmp_cfg_t'('b0);
-        end else if (pmp_cfg_we[i]) begin
-          pmp_cfg[i] <= pmp_cfg_wdata[i];
+        // --------------------------
+        // Instantiate addr registers
+        // --------------------------
+        if (j < PMPNumRegions - 1) begin : g_lower
+          assign pmp_addr_we[j] = csr_we_int & ~pmp_cfg[j].lock &
+                                  (pmp_cfg[j+1].mode != PMP_MODE_TOR) &
+                                  (csr_addr == (CSR_OFF_PMP_ADDR + j[11:0]));
+        end else begin : g_upper
+          assign pmp_addr_we[j] = csr_we_int & ~pmp_cfg[j].lock &
+                                  (csr_addr == (CSR_OFF_PMP_ADDR + j[11:0]));
         end
-      end
 
-      // --------------------------
-      // Instantiate addr registers
-      // --------------------------
-      if (i < PMPNumRegions - 1) begin : g_lower
-        assign pmp_addr_we[i] = csr_we_int & ~pmp_cfg[i].lock &
-                                (pmp_cfg[i+1].mode != PMP_MODE_TOR) &
-                                (csr_addr == (CSR_OFF_PMP_ADDR + i[11:0]));
-      end else begin : g_upper
-        assign pmp_addr_we[i] = csr_we_int & ~pmp_cfg[i].lock &
-                                (csr_addr == (CSR_OFF_PMP_ADDR + i[11:0]));
-      end
-
-      always_ff @(posedge clk_i or negedge rst_ni) begin
-        if (!rst_ni) begin
-          pmp_addr[i] <= 'b0;
-        end else if (pmp_addr_we[i]) begin
-          pmp_addr[i] <= csr_wdata_int;
+        always_ff @(posedge clk_i or negedge rst_ni) begin
+          if (!rst_ni) begin
+            pmp_addr[j] <= 'b0;
+          end else if (pmp_addr_we[j]) begin
+            pmp_addr[j] <= csr_wdata_int;
+          end
         end
+        assign csr_pmp_cfg_o[j]  = pmp_cfg[j];
+        assign csr_pmp_addr_o[j] = {pmp_addr[j],2'b00};
       end
-      assign csr_pmp_cfg_o[i]  = pmp_cfg[i];
-      assign csr_pmp_addr_o[i] = {pmp_addr[i],2'b00};
-    end
 
-  end else begin : g_no_pmp_tieoffs
-    // Generate tieoffs when PMP is not configured
-    for (genvar i = 0; i < PMP_MAX_REGIONS; i++) begin : g_rdata
-      assign pmp_addr_rdata[i] = '0;
-      assign pmp_cfg_rdata[i]  = '0;
+    end else begin : g_no_pmp_tieoffs
+      // Generate tieoffs when PMP is not configured
+      genvar k;
+      for (k = 0; k < PMP_MAX_REGIONS; k++) begin : g_rdata
+        assign pmp_addr_rdata[k] = '0;
+        assign pmp_cfg_rdata[k]  = '0;
+      end
+      genvar l;
+      for (l = 0; l < PMPNumRegions; l++) begin : g_outputs
+        assign csr_pmp_cfg_o[l]  = pmp_cfg_t'(1'b0);
+        assign csr_pmp_addr_o[l] = '0;
+      end
     end
-    for (genvar i = 0; i < PMPNumRegions; i++) begin : g_outputs
-      assign csr_pmp_cfg_o[i]  = pmp_cfg_t'(1'b0);
-      assign csr_pmp_addr_o[i] = '0;
-    end
-  end
+  endgenerate
 
   //////////////////////////
   //  Performance monitor //
@@ -948,11 +953,13 @@ module ibex_cs_registers #(
     .counter_val_o(mhpmcounter[3:31])
   );
 
-  if(MHPMCounterNum < 29) begin : g_mcountinhibit_reduced
-    assign mcountinhibit = {{29-MHPMCounterNum{1'b1}}, mcountinhibit_q};
-  end else begin : g_mcountinhibit_full
-    assign mcountinhibit = mcountinhibit_q;
-  end
+  generate
+    if(MHPMCounterNum < 29) begin : g_mcountinhibit_reduced
+      assign mcountinhibit = {{29-MHPMCounterNum{1'b1}}, mcountinhibit_q};
+    end else begin : g_mcountinhibit_full
+      assign mcountinhibit = mcountinhibit_q;
+    end
+  endgenerate
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
@@ -965,76 +972,77 @@ module ibex_cs_registers #(
   /////////////////////////////
   // Debug trigger registers //
   /////////////////////////////
-
-  if (DbgTriggerEn) begin : gen_trigger_regs
-    // Register values
-    logic        tmatch_control_d, tmatch_control_q;
-    logic [31:0] tmatch_value_d, tmatch_value_q;
-    // Write enables
-    logic tmatch_control_we;
-    logic tmatch_value_we;
-
-    // Write select
-    assign tmatch_control_we = csr_we_int & debug_mode_i & (csr_addr_i == CSR_TDATA1);
-    assign tmatch_value_we   = csr_we_int & debug_mode_i & (csr_addr_i == CSR_TDATA2);
-
-    // tmatch_control is enabled when the execute bit is set
-    assign tmatch_control_d = tmatch_control_we ? csr_wdata_int[2] :
-                                                  tmatch_control_q;
-    // tmatch_value has its own clock gate
-    assign tmatch_value_d   = csr_wdata_int[31:0];
-
-    // Registers
-    always_ff @(posedge clk_i or negedge rst_ni) begin
-      if (!rst_ni) begin
-        tmatch_control_q <= 'b0;
-      end else begin
-        tmatch_control_q <= tmatch_control_d;
+  generate
+    if (DbgTriggerEn) begin : gen_trigger_regs
+      // Register values
+      logic        tmatch_control_d, tmatch_control_q;
+      logic [31:0] tmatch_value_d, tmatch_value_q;
+      // Write enables
+      logic tmatch_control_we;
+      logic tmatch_value_we;
+  
+      // Write select
+      assign tmatch_control_we = csr_we_int & debug_mode_i & (csr_addr_i == CSR_TDATA1);
+      assign tmatch_value_we   = csr_we_int & debug_mode_i & (csr_addr_i == CSR_TDATA2);
+  
+      // tmatch_control is enabled when the execute bit is set
+      assign tmatch_control_d = tmatch_control_we ? csr_wdata_int[2] :
+                                                    tmatch_control_q;
+      // tmatch_value has its own clock gate
+      assign tmatch_value_d   = csr_wdata_int[31:0];
+  
+      // Registers
+      always_ff @(posedge clk_i or negedge rst_ni) begin
+        if (!rst_ni) begin
+          tmatch_control_q <= 'b0;
+        end else begin
+          tmatch_control_q <= tmatch_control_d;
+        end
       end
-    end
-
-    always_ff @(posedge clk_i or negedge rst_ni) begin
-      if (!rst_ni) begin
-        tmatch_value_q <= 'b0;
-      end else if (tmatch_value_we) begin
-        tmatch_value_q <= tmatch_value_d;
+  
+      always_ff @(posedge clk_i or negedge rst_ni) begin
+        if (!rst_ni) begin
+          tmatch_value_q <= 'b0;
+        end else if (tmatch_value_we) begin
+          tmatch_value_q <= tmatch_value_d;
+        end
       end
+  
+      // Assign read data
+      // TSELECT - only one supported
+      assign tselect_rdata = 'b0;
+      // TDATA0 - only support simple address matching
+      assign tmatch_control_rdata = {4'h2,              // type    : address/data match
+                                     1'b1,              // dmode   : access from D mode only
+                                     6'h00,             // maskmax : exact match only
+                                     1'b0,              // hit     : not supported
+                                     1'b0,              // select  : address match only
+                                     1'b0,              // timing  : match before execution
+                                     2'b00,             // sizelo  : match any access
+                                     4'h1,              // action  : enter debug mode
+                                     1'b0,              // chain   : not supported
+                                     4'h0,              // match   : simple match
+                                     1'b1,              // m       : match in m-mode
+                                     1'b0,              // 0       : zero
+                                     1'b0,              // s       : not supported
+                                     1'b1,              // u       : match in u-mode
+                                     tmatch_control_q,  // execute : match instruction address
+                                     1'b0,              // store   : not supported
+                                     1'b0};             // load    : not supported
+      // TDATA1 - address match value only
+      assign tmatch_value_rdata = tmatch_value_q;
+  
+      // Breakpoint matching
+      // We match against the next address, as the breakpoint must be taken before execution
+      assign trigger_match_o = tmatch_control_q & (pc_if_i[31:0] == tmatch_value_q[31:0]);
+  
+    end else begin : gen_no_trigger_regs
+      assign tselect_rdata        = 'b0;
+      assign tmatch_control_rdata = 'b0;
+      assign tmatch_value_rdata   = 'b0;
+      assign trigger_match_o      = 'b0;
     end
-
-    // Assign read data
-    // TSELECT - only one supported
-    assign tselect_rdata = 'b0;
-    // TDATA0 - only support simple address matching
-    assign tmatch_control_rdata = {4'h2,              // type    : address/data match
-                                   1'b1,              // dmode   : access from D mode only
-                                   6'h00,             // maskmax : exact match only
-                                   1'b0,              // hit     : not supported
-                                   1'b0,              // select  : address match only
-                                   1'b0,              // timing  : match before execution
-                                   2'b00,             // sizelo  : match any access
-                                   4'h1,              // action  : enter debug mode
-                                   1'b0,              // chain   : not supported
-                                   4'h0,              // match   : simple match
-                                   1'b1,              // m       : match in m-mode
-                                   1'b0,              // 0       : zero
-                                   1'b0,              // s       : not supported
-                                   1'b1,              // u       : match in u-mode
-                                   tmatch_control_q,  // execute : match instruction address
-                                   1'b0,              // store   : not supported
-                                   1'b0};             // load    : not supported
-    // TDATA1 - address match value only
-    assign tmatch_value_rdata = tmatch_value_q;
-
-    // Breakpoint matching
-    // We match against the next address, as the breakpoint must be taken before execution
-    assign trigger_match_o = tmatch_control_q & (pc_if_i[31:0] == tmatch_value_q[31:0]);
-
-  end else begin : gen_no_trigger_regs
-    assign tselect_rdata        = 'b0;
-    assign tmatch_control_rdata = 'b0;
-    assign tmatch_value_rdata   = 'b0;
-    assign trigger_match_o      = 'b0;
-  end
+  endgenerate 
 
 
   /////////////////
@@ -1058,12 +1066,12 @@ module ibex_cs_registers #(
   ////////////////
 
   // Selectors must be known/valid.
-  `ASSERT(IbexCsrOpValid, csr_op_i inside {
-      CSR_OP_READ,
-      CSR_OP_WRITE,
-      CSR_OP_SET,
-      CSR_OP_CLEAR
-      })
-  `ASSERT_KNOWN(IbexCsrWdataIntKnown, csr_wdata_int)
+  // `ASSERT(IbexCsrOpValid, csr_op_i inside {
+      // CSR_OP_READ,
+      // CSR_OP_WRITE,
+      // CSR_OP_SET,
+      // CSR_OP_CLEAR
+      // })
+  // `ASSERT_KNOWN(IbexCsrWdataIntKnown, csr_wdata_int)
 
 endmodule
