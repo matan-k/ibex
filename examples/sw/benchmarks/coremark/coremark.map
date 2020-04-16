@@ -1,0 +1,673 @@
+Archive member included to satisfy reference by file (symbol)
+
+/home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/../../../../riscv32-unknown-elf/lib/libm.a(lib_a-s_modf.o)
+                              /tmp/ccYeqwVe.o (modf)
+/home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(adddf3.o)
+                              /tmp/ccYeqwVe.o (__adddf3)
+/home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divdf3.o)
+                              /tmp/ccspqRAJ.o (__divdf3)
+/home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(eqdf2.o)
+                              /tmp/ccYeqwVe.o (__nedf2)
+/home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(gedf2.o)
+                              /tmp/ccspqRAJ.o (__gtdf2)
+/home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(ledf2.o)
+                              /tmp/ccspqRAJ.o (__ltdf2)
+/home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(muldf3.o)
+                              /tmp/ccYeqwVe.o (__muldf3)
+/home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(subdf3.o)
+                              /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/../../../../riscv32-unknown-elf/lib/libm.a(lib_a-s_modf.o) (__subdf3)
+/home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixdfsi.o)
+                              /tmp/ccYeqwVe.o (__fixdfsi)
+/home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixunsdfsi.o)
+                              /tmp/ccspqRAJ.o (__fixunsdfsi)
+/home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsidf.o)
+                              /tmp/ccspqRAJ.o (__floatunsidf)
+/home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divsf3.o)
+                              /tmp/cc49NtgG.o (__divsf3)
+/home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsisf.o)
+                              /tmp/cc49NtgG.o (__floatunsisf)
+/home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(extendsfdf2.o)
+                              /tmp/cc49NtgG.o (__extendsfdf2)
+/home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clzsi2.o)
+                              /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(adddf3.o) (__clzsi2)
+/home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clz.o)
+                              /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clzsi2.o) (__clz_tab)
+
+Allocating common symbols
+Common symbol       size              file
+
+time_elapsed        0x8               /tmp/ccNdCbqO.o
+time_increment      0x8               /tmp/ccNdCbqO.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+ram              0x0000000000100000 0x00000000000f8000
+stack            0x00000000001f8000 0x0000000000008000
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+LOAD /tmp/ccrMuQlw.o
+LOAD /tmp/ccspqRAJ.o
+LOAD /tmp/ccBpjNNX.o
+LOAD /tmp/ccA2VEjc.o
+LOAD /tmp/ccXbgpar.o
+LOAD /tmp/cc49NtgG.o
+LOAD /tmp/ccMB9BmX.o
+LOAD /tmp/ccYeqwVe.o
+LOAD /tmp/cclikmww.o
+LOAD /tmp/ccNdCbqO.o
+LOAD /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/../../../../riscv32-unknown-elf/lib/libm.a
+LOAD /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a
+                0x0000000000002000                _min_stack = 0x2000
+                0x0000000000008000                _stack_len = LENGTH (stack)
+                0x0000000000200000                _stack_start = (ORIGIN (stack) + LENGTH (stack))
+                0x0000000000100080                _entry_point = (_vectors_start + 0x80)
+                0x0000000000020008                tohost = 0x20008
+                0x0000000000200010                fromhost = (_stack_start + 0x10)
+
+.vectors        0x0000000000100000       0x84
+                0x0000000000100000                . = ALIGN (0x4)
+                0x0000000000100000                _vectors_start = .
+ *(.vectors)
+ .vectors       0x0000000000100000       0x84 /tmp/cclikmww.o
+                0x0000000000100084                _vectors_end = .
+
+.text           0x0000000000100090     0xbaca
+                0x0000000000100090                . = ALIGN (0x4)
+ *(.text)
+ .text          0x0000000000100090     0x1044 /tmp/ccrMuQlw.o
+                0x0000000000100090                calc_func
+                0x0000000000100190                cmp_complex
+                0x0000000000100340                cmp_idx
+                0x00000000001003a0                copy_info
+                0x00000000001003c0                core_bench_list
+                0x00000000001009f0                core_list_init
+                0x0000000000100e30                core_list_insert_new
+                0x0000000000100e90                core_list_remove
+                0x0000000000100eb0                core_list_undo_remove
+                0x0000000000100ec0                core_list_find
+                0x0000000000100f00                core_list_reverse
+                0x0000000000100f80                core_list_mergesort
+ *fill*         0x00000000001010d4        0xc 
+ .text          0x00000000001010e0       0x70 /tmp/ccspqRAJ.o
+                0x00000000001010e0                iterate
+ .text          0x0000000000101150     0x283a /tmp/ccBpjNNX.o
+                0x0000000000101150                matrix_test
+                0x0000000000102930                core_bench_matrix
+                0x0000000000102960                core_init_matrix
+                0x0000000000102ce0                matrix_sum
+                0x00000000001030e0                matrix_mul_const
+                0x0000000000103250                matrix_add_const
+                0x0000000000103450                matrix_mul_vect
+                0x00000000001035f0                matrix_mul_matrix
+                0x00000000001037e0                matrix_mul_matrix_bitextract
+ *fill*         0x000000000010398a        0x6 
+ .text          0x0000000000103990      0x762 /tmp/ccA2VEjc.o
+                0x0000000000103990                core_init_state
+                0x0000000000103bf0                core_state_transition
+                0x0000000000103e90                core_bench_state
+ *fill*         0x00000000001040f2        0xe 
+ .text          0x0000000000104100      0xb22 /tmp/ccXbgpar.o
+                0x0000000000104100                get_seed_32
+                0x0000000000104160                crcu8
+                0x0000000000104290                crcu16
+                0x00000000001044f0                crcu32
+                0x00000000001049b0                crc16
+                0x0000000000104c10                check_data_types
+ *fill*         0x0000000000104c22        0xe 
+ .text          0x0000000000104c30      0x242 /tmp/cc49NtgG.o
+                0x0000000000104c30                barebones_clock
+                0x0000000000104c40                pcount_read
+                0x0000000000104c90                dump_pcounts
+                0x0000000000104cf0                start_time
+                0x0000000000104d20                stop_time
+                0x0000000000104d40                get_time
+                0x0000000000104d60                time_in_secs
+                0x0000000000104d80                portable_init
+                0x0000000000104db0                portable_fini
+ *fill*         0x0000000000104e72        0xe 
+ .text          0x0000000000104e80     0x305c /tmp/ccMB9BmX.o
+                0x00000000001056e0                ee_printf
+ *fill*         0x0000000000107edc        0x4 
+ .text          0x0000000000107ee0      0x80a /tmp/ccYeqwVe.o
+                0x00000000001086b0                ecvt
+                0x00000000001086c0                ecvtbuf
+                0x00000000001086d0                fcvt
+                0x00000000001086e0                fcvtbuf
+ .text          0x00000000001086ea       0x8c /tmp/cclikmww.o
+                0x000000000010873a                _start
+ *fill*         0x0000000000108776        0xa 
+ .text          0x0000000000108780      0xb82 /tmp/ccNdCbqO.o
+                0x0000000000108780                putchar
+                0x0000000000108790                puts
+                0x0000000000108800                puthex
+                0x0000000000108990                sim_halt
+                0x00000000001089a0                pcount_reset
+                0x0000000000108aa0                pcount_enable
+                0x0000000000108ab0                get_mepc
+                0x0000000000108ac0                get_mcause
+                0x0000000000108ad0                get_mtval
+                0x0000000000108ae0                simple_exc_handler
+                0x0000000000109090                timer_enable
+                0x0000000000109160                timer_disable
+                0x0000000000109170                timer_read
+                0x00000000001091e0                timecmp_update
+                0x00000000001091f0                get_elapsed_time
+                0x0000000000109200                simple_timer_handler
+ .text          0x0000000000109302       0xa8 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/../../../../riscv32-unknown-elf/lib/libm.a(lib_a-s_modf.o)
+                0x0000000000109302                modf
+ .text          0x00000000001093aa      0x5f0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(adddf3.o)
+                0x00000000001093aa                __adddf3
+ .text          0x000000000010999a      0x546 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divdf3.o)
+                0x000000000010999a                __divdf3
+ .text          0x0000000000109ee0       0x6a /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(eqdf2.o)
+                0x0000000000109ee0                __eqdf2
+                0x0000000000109ee0                __nedf2
+ .text          0x0000000000109f4a       0xa6 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(gedf2.o)
+                0x0000000000109f4a                __gtdf2
+                0x0000000000109f4a                __gedf2
+ .text          0x0000000000109ff0       0xa6 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(ledf2.o)
+                0x0000000000109ff0                __ltdf2
+                0x0000000000109ff0                __ledf2
+ .text          0x000000000010a096      0x448 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(muldf3.o)
+                0x000000000010a096                __muldf3
+ .text          0x000000000010a4de      0x5fe /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(subdf3.o)
+                0x000000000010a4de                __subdf3
+ .text          0x000000000010aadc       0x64 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixdfsi.o)
+                0x000000000010aadc                __fixdfsi
+ .text          0x000000000010ab40       0x60 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixunsdfsi.o)
+                0x000000000010ab40                __fixunsdfsi
+ .text          0x000000000010aba0       0x4e /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsidf.o)
+                0x000000000010aba0                __floatunsidf
+ .text          0x000000000010abee      0x244 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divsf3.o)
+                0x000000000010abee                __divsf3
+ .text          0x000000000010ae32       0x9a /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsisf.o)
+                0x000000000010ae32                __floatunsisf
+ .text          0x000000000010aecc       0x96 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(extendsfdf2.o)
+                0x000000000010aecc                __extendsfdf2
+ .text          0x000000000010af62       0x3c /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clzsi2.o)
+                0x000000000010af62                __clzsi2
+ .text          0x000000000010af9e        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clz.o)
+ *(.text.*)
+ *fill*         0x000000000010af9e        0x2 
+ .text.startup  0x000000000010afa0      0xbba /tmp/ccspqRAJ.o
+                0x000000000010afa0                main
+
+.rodata         0x000000000010bb5c      0xa3f
+                0x000000000010bb5c                . = ALIGN (0x4)
+ *(.rodata)
+ .rodata        0x000000000010bb5c       0x40 /tmp/ccA2VEjc.o
+ .rodata        0x000000000010bb9c       0x18 /tmp/ccXbgpar.o
+ .rodata        0x000000000010bbb4      0x204 /tmp/ccMB9BmX.o
+ .rodata        0x000000000010bdb8       0x3c /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divdf3.o)
+ .rodata        0x000000000010bdf4       0x3c /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(muldf3.o)
+ .rodata        0x000000000010be30       0x3c /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divsf3.o)
+ .rodata        0x000000000010be6c      0x100 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clz.o)
+                0x000000000010be6c                __clz_tab
+ *(.rodata.*)
+ .rodata.str1.4
+                0x000000000010bf6c      0x3d6 /tmp/ccspqRAJ.o
+                                        0x3de (size before relaxing)
+ *fill*         0x000000000010c342        0x2 
+ .rodata.str1.4
+                0x000000000010c344       0xad /tmp/ccA2VEjc.o
+ *fill*         0x000000000010c3f1        0x3 
+ .rodata.str1.4
+                0x000000000010c3f4      0x100 /tmp/cc49NtgG.o
+                                        0x104 (size before relaxing)
+ .rodata.str1.4
+                0x000000000010c4f4       0x57 /tmp/ccMB9BmX.o
+ *fill*         0x000000000010c54b        0x1 
+ .rodata.str1.4
+                0x000000000010c54c       0x4f /tmp/ccNdCbqO.o
+
+.srodata.cst8   0x000000000010c5a0       0x20
+ .srodata.cst8  0x000000000010c5a0        0x8 /tmp/ccspqRAJ.o
+ .srodata.cst8  0x000000000010c5a8        0x8 /tmp/cc49NtgG.o
+ .srodata.cst8  0x000000000010c5b0       0x10 /tmp/ccYeqwVe.o
+                                         0x18 (size before relaxing)
+
+.srodata.cst4   0x000000000010c5c0        0x4
+ .srodata.cst4  0x000000000010c5c0        0x4 /tmp/cc49NtgG.o
+
+.srodata        0x000000000010c5c4        0x4
+ .srodata       0x000000000010c5c4        0x4 /tmp/cc49NtgG.o
+                0x000000000010c5c4                pcount_num
+
+.rela.dyn       0x000000000010c5c8        0x0
+ .rela.text     0x000000000010c5c8        0x0 /tmp/ccrMuQlw.o
+
+.data           0x000000000010c5c8       0x38
+                0x000000000010c5c8                . = ALIGN (0x4)
+ *(.data)
+ .data          0x000000000010c5c8        0x0 /tmp/ccrMuQlw.o
+ .data          0x000000000010c5c8        0xc /tmp/ccspqRAJ.o
+                0x000000000010c5c8                mem_name
+ .data          0x000000000010c5d4        0x0 /tmp/ccBpjNNX.o
+ .data          0x000000000010c5d4        0x0 /tmp/ccA2VEjc.o
+ .data          0x000000000010c5d4        0x0 /tmp/ccXbgpar.o
+ .data          0x000000000010c5d4       0x2c /tmp/cc49NtgG.o
+                0x000000000010c5d4                pcount_names
+ .data          0x000000000010c600        0x0 /tmp/ccMB9BmX.o
+ .data          0x000000000010c600        0x0 /tmp/ccYeqwVe.o
+ .data          0x000000000010c600        0x0 /tmp/cclikmww.o
+ .data          0x000000000010c600        0x0 /tmp/ccNdCbqO.o
+ .data          0x000000000010c600        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/../../../../riscv32-unknown-elf/lib/libm.a(lib_a-s_modf.o)
+ .data          0x000000000010c600        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(adddf3.o)
+ .data          0x000000000010c600        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divdf3.o)
+ .data          0x000000000010c600        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(eqdf2.o)
+ .data          0x000000000010c600        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(gedf2.o)
+ .data          0x000000000010c600        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(ledf2.o)
+ .data          0x000000000010c600        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(muldf3.o)
+ .data          0x000000000010c600        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(subdf3.o)
+ .data          0x000000000010c600        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixdfsi.o)
+ .data          0x000000000010c600        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixunsdfsi.o)
+ .data          0x000000000010c600        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsidf.o)
+ .data          0x000000000010c600        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divsf3.o)
+ .data          0x000000000010c600        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsisf.o)
+ .data          0x000000000010c600        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(extendsfdf2.o)
+ .data          0x000000000010c600        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clzsi2.o)
+ .data          0x000000000010c600        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clz.o)
+ *(.data.*)
+
+.sdata          0x000000000010c600        0xc
+ .sdata         0x000000000010c600        0xc /tmp/cc49NtgG.o
+                0x000000000010c600                default_num_contexts
+                0x000000000010c604                seed4_volatile
+                0x000000000010c608                seed3_volatile
+
+.bss            0x000000000010c610       0x60
+                0x000000000010c610                . = ALIGN (0x4)
+                0x000000000010c610                _bss_start = .
+ *(.bss)
+ .bss           0x000000000010c610        0x0 /tmp/ccrMuQlw.o
+ .bss           0x000000000010c610        0x0 /tmp/ccspqRAJ.o
+ .bss           0x000000000010c610        0x0 /tmp/ccBpjNNX.o
+ .bss           0x000000000010c610        0x0 /tmp/ccA2VEjc.o
+ .bss           0x000000000010c610        0x0 /tmp/ccXbgpar.o
+ .bss           0x000000000010c610        0x0 /tmp/cc49NtgG.o
+ .bss           0x000000000010c610        0x0 /tmp/ccMB9BmX.o
+ .bss           0x000000000010c610       0x50 /tmp/ccYeqwVe.o
+ .bss           0x000000000010c660        0x0 /tmp/cclikmww.o
+ .bss           0x000000000010c660        0x0 /tmp/ccNdCbqO.o
+ .bss           0x000000000010c660        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/../../../../riscv32-unknown-elf/lib/libm.a(lib_a-s_modf.o)
+ .bss           0x000000000010c660        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(adddf3.o)
+ .bss           0x000000000010c660        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divdf3.o)
+ .bss           0x000000000010c660        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(eqdf2.o)
+ .bss           0x000000000010c660        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(gedf2.o)
+ .bss           0x000000000010c660        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(ledf2.o)
+ .bss           0x000000000010c660        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(muldf3.o)
+ .bss           0x000000000010c660        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(subdf3.o)
+ .bss           0x000000000010c660        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixdfsi.o)
+ .bss           0x000000000010c660        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixunsdfsi.o)
+ .bss           0x000000000010c660        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsidf.o)
+ .bss           0x000000000010c660        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divsf3.o)
+ .bss           0x000000000010c660        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsisf.o)
+ .bss           0x000000000010c660        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(extendsfdf2.o)
+ .bss           0x000000000010c660        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clzsi2.o)
+ .bss           0x000000000010c660        0x0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clz.o)
+ *(.bss.*)
+ *(COMMON)
+ COMMON         0x000000000010c660       0x10 /tmp/ccNdCbqO.o
+                0x000000000010c660                time_elapsed
+                0x000000000010c668                time_increment
+                0x000000000010c670                _bss_end = .
+
+.sbss           0x000000000010c670       0x14
+ .sbss          0x000000000010c670       0x14 /tmp/cc49NtgG.o
+                0x000000000010c678                seed5_volatile
+                0x000000000010c67c                seed2_volatile
+                0x000000000010c680                seed1_volatile
+
+.stack          0x00000000001f8000     0x2000
+                0x00000000001f8000                . = ALIGN (0x4)
+                0x00000000001fa000                . = (. + _min_stack)
+ *fill*         0x00000000001f8000     0x2000 
+                0x00000000001fa000                . = ALIGN (0x4)
+                0x00000000001fa000                stack = .
+                0x00000000001fa000                _stack = .
+OUTPUT(/home/matan/projects/matank-ibex/ibex/examples/sw/benchmarks/coremark/coremark.elf elf32-littleriscv)
+
+.debug_info     0x0000000000000000     0xa1b9
+ .debug_info    0x0000000000000000     0x112e /tmp/ccrMuQlw.o
+ .debug_info    0x000000000000112e      0xc56 /tmp/ccspqRAJ.o
+ .debug_info    0x0000000000001d84      0xb2e /tmp/ccBpjNNX.o
+ .debug_info    0x00000000000028b2      0x582 /tmp/ccA2VEjc.o
+ .debug_info    0x0000000000002e34      0x57e /tmp/ccXbgpar.o
+ .debug_info    0x00000000000033b2      0x5dc /tmp/cc49NtgG.o
+ .debug_info    0x000000000000398e      0xa88 /tmp/ccMB9BmX.o
+ .debug_info    0x0000000000004416      0xd8c /tmp/ccYeqwVe.o
+ .debug_info    0x00000000000051a2       0x22 /tmp/cclikmww.o
+ .debug_info    0x00000000000051c4      0x7e0 /tmp/ccNdCbqO.o
+ .debug_info    0x00000000000059a4      0x599 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(adddf3.o)
+ .debug_info    0x0000000000005f3d      0x730 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divdf3.o)
+ .debug_info    0x000000000000666d      0x288 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(eqdf2.o)
+ .debug_info    0x00000000000068f5      0x286 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(gedf2.o)
+ .debug_info    0x0000000000006b7b      0x286 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(ledf2.o)
+ .debug_info    0x0000000000006e01      0x75c /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(muldf3.o)
+ .debug_info    0x000000000000755d      0x599 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(subdf3.o)
+ .debug_info    0x0000000000007af6      0x21a /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixdfsi.o)
+ .debug_info    0x0000000000007d10      0x208 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixunsdfsi.o)
+ .debug_info    0x0000000000007f18      0x2af /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsidf.o)
+ .debug_info    0x00000000000081c7      0x3bb /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divsf3.o)
+ .debug_info    0x0000000000008582      0x24a /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsisf.o)
+ .debug_info    0x00000000000087cc      0x2ac /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(extendsfdf2.o)
+ .debug_info    0x0000000000008a78      0xbd7 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clzsi2.o)
+ .debug_info    0x000000000000964f      0xb6a /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clz.o)
+
+.debug_abbrev   0x0000000000000000     0x2d4c
+ .debug_abbrev  0x0000000000000000      0x2e0 /tmp/ccrMuQlw.o
+ .debug_abbrev  0x00000000000002e0      0x1db /tmp/ccspqRAJ.o
+ .debug_abbrev  0x00000000000004bb      0x227 /tmp/ccBpjNNX.o
+ .debug_abbrev  0x00000000000006e2      0x21c /tmp/ccA2VEjc.o
+ .debug_abbrev  0x00000000000008fe      0x175 /tmp/ccXbgpar.o
+ .debug_abbrev  0x0000000000000a73      0x28f /tmp/cc49NtgG.o
+ .debug_abbrev  0x0000000000000d02      0x2f7 /tmp/ccMB9BmX.o
+ .debug_abbrev  0x0000000000000ff9      0x29d /tmp/ccYeqwVe.o
+ .debug_abbrev  0x0000000000001296       0x12 /tmp/cclikmww.o
+ .debug_abbrev  0x00000000000012a8      0x262 /tmp/ccNdCbqO.o
+ .debug_abbrev  0x000000000000150a      0x196 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(adddf3.o)
+ .debug_abbrev  0x00000000000016a0      0x187 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divdf3.o)
+ .debug_abbrev  0x0000000000001827      0x186 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(eqdf2.o)
+ .debug_abbrev  0x00000000000019ad      0x199 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(gedf2.o)
+ .debug_abbrev  0x0000000000001b46      0x199 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(ledf2.o)
+ .debug_abbrev  0x0000000000001cdf      0x18e /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(muldf3.o)
+ .debug_abbrev  0x0000000000001e6d      0x196 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(subdf3.o)
+ .debug_abbrev  0x0000000000002003      0x18a /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixdfsi.o)
+ .debug_abbrev  0x000000000000218d      0x18a /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixunsdfsi.o)
+ .debug_abbrev  0x0000000000002317      0x178 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsidf.o)
+ .debug_abbrev  0x000000000000248f      0x16f /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divsf3.o)
+ .debug_abbrev  0x00000000000025fe      0x1a9 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsisf.o)
+ .debug_abbrev  0x00000000000027a7      0x17b /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(extendsfdf2.o)
+ .debug_abbrev  0x0000000000002922      0x242 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clzsi2.o)
+ .debug_abbrev  0x0000000000002b64      0x1e8 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clz.o)
+
+.debug_loc      0x0000000000000000    0x1237d
+ .debug_loc     0x0000000000000000     0x2cc5 /tmp/ccrMuQlw.o
+ .debug_loc     0x0000000000002cc5      0x68a /tmp/ccspqRAJ.o
+ .debug_loc     0x000000000000334f     0x2571 /tmp/ccBpjNNX.o
+ .debug_loc     0x00000000000058c0      0x922 /tmp/ccA2VEjc.o
+ .debug_loc     0x00000000000061e2     0x149d /tmp/ccXbgpar.o
+ .debug_loc     0x000000000000767f      0x200 /tmp/cc49NtgG.o
+ .debug_loc     0x000000000000787f     0x3cf5 /tmp/ccMB9BmX.o
+ .debug_loc     0x000000000000b574      0xa83 /tmp/ccYeqwVe.o
+ .debug_loc     0x000000000000bff7      0xf98 /tmp/ccNdCbqO.o
+ .debug_loc     0x000000000000cf8f     0x119d /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(adddf3.o)
+ .debug_loc     0x000000000000e12c     0x10fe /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divdf3.o)
+ .debug_loc     0x000000000000f22a       0xa4 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(eqdf2.o)
+ .debug_loc     0x000000000000f2ce      0x135 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(gedf2.o)
+ .debug_loc     0x000000000000f403      0x135 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(ledf2.o)
+ .debug_loc     0x000000000000f538      0xd9a /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(muldf3.o)
+ .debug_loc     0x00000000000102d2     0x1208 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(subdf3.o)
+ .debug_loc     0x00000000000114da      0x181 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixdfsi.o)
+ .debug_loc     0x000000000001165b       0xe7 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixunsdfsi.o)
+ .debug_loc     0x0000000000011742      0x14f /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsidf.o)
+ .debug_loc     0x0000000000011891      0x758 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divsf3.o)
+ .debug_loc     0x0000000000011fe9      0x165 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsisf.o)
+ .debug_loc     0x000000000001214e      0x1c4 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(extendsfdf2.o)
+ .debug_loc     0x0000000000012312       0x6b /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clzsi2.o)
+
+.debug_aranges  0x0000000000000000      0x328
+ .debug_aranges
+                0x0000000000000000       0x20 /tmp/ccrMuQlw.o
+ .debug_aranges
+                0x0000000000000020       0x28 /tmp/ccspqRAJ.o
+ .debug_aranges
+                0x0000000000000048       0x20 /tmp/ccBpjNNX.o
+ .debug_aranges
+                0x0000000000000068       0x20 /tmp/ccA2VEjc.o
+ .debug_aranges
+                0x0000000000000088       0x20 /tmp/ccXbgpar.o
+ .debug_aranges
+                0x00000000000000a8       0x20 /tmp/cc49NtgG.o
+ .debug_aranges
+                0x00000000000000c8       0x20 /tmp/ccMB9BmX.o
+ .debug_aranges
+                0x00000000000000e8       0x20 /tmp/ccYeqwVe.o
+ .debug_aranges
+                0x0000000000000108       0x28 /tmp/cclikmww.o
+ .debug_aranges
+                0x0000000000000130       0x20 /tmp/ccNdCbqO.o
+ .debug_aranges
+                0x0000000000000150       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(adddf3.o)
+ .debug_aranges
+                0x0000000000000170       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divdf3.o)
+ .debug_aranges
+                0x0000000000000190       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(eqdf2.o)
+ .debug_aranges
+                0x00000000000001b0       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(gedf2.o)
+ .debug_aranges
+                0x00000000000001d0       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(ledf2.o)
+ .debug_aranges
+                0x00000000000001f0       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(muldf3.o)
+ .debug_aranges
+                0x0000000000000210       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(subdf3.o)
+ .debug_aranges
+                0x0000000000000230       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixdfsi.o)
+ .debug_aranges
+                0x0000000000000250       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixunsdfsi.o)
+ .debug_aranges
+                0x0000000000000270       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsidf.o)
+ .debug_aranges
+                0x0000000000000290       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divsf3.o)
+ .debug_aranges
+                0x00000000000002b0       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsisf.o)
+ .debug_aranges
+                0x00000000000002d0       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(extendsfdf2.o)
+ .debug_aranges
+                0x00000000000002f0       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clzsi2.o)
+ .debug_aranges
+                0x0000000000000310       0x18 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clz.o)
+
+.debug_ranges   0x0000000000000000     0x2130
+ .debug_ranges  0x0000000000000000      0x3e8 /tmp/ccrMuQlw.o
+ .debug_ranges  0x00000000000003e8       0xb0 /tmp/ccspqRAJ.o
+ .debug_ranges  0x0000000000000498      0x2b0 /tmp/ccBpjNNX.o
+ .debug_ranges  0x0000000000000748      0x1d8 /tmp/ccA2VEjc.o
+ .debug_ranges  0x0000000000000920      0x190 /tmp/ccXbgpar.o
+ .debug_ranges  0x0000000000000ab0       0x38 /tmp/cc49NtgG.o
+ .debug_ranges  0x0000000000000ae8      0x220 /tmp/ccMB9BmX.o
+ .debug_ranges  0x0000000000000d08       0x20 /tmp/cclikmww.o
+ .debug_ranges  0x0000000000000d28      0x900 /tmp/ccNdCbqO.o
+ .debug_ranges  0x0000000000001628      0x228 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(adddf3.o)
+ .debug_ranges  0x0000000000001850      0x198 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divdf3.o)
+ .debug_ranges  0x00000000000019e8       0x48 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(eqdf2.o)
+ .debug_ranges  0x0000000000001a30       0x50 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(gedf2.o)
+ .debug_ranges  0x0000000000001a80       0x50 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(ledf2.o)
+ .debug_ranges  0x0000000000001ad0      0x230 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(muldf3.o)
+ .debug_ranges  0x0000000000001d00      0x220 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(subdf3.o)
+ .debug_ranges  0x0000000000001f20       0x18 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixdfsi.o)
+ .debug_ranges  0x0000000000001f38       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixunsdfsi.o)
+ .debug_ranges  0x0000000000001f58       0x70 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsidf.o)
+ .debug_ranges  0x0000000000001fc8       0xc0 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divsf3.o)
+ .debug_ranges  0x0000000000002088       0x50 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsisf.o)
+ .debug_ranges  0x00000000000020d8       0x38 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(extendsfdf2.o)
+ .debug_ranges  0x0000000000002110       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clzsi2.o)
+
+.debug_line     0x0000000000000000    0x216dc
+ .debug_line    0x0000000000000000     0x37fd /tmp/ccrMuQlw.o
+ .debug_line    0x00000000000037fd     0x189a /tmp/ccspqRAJ.o
+ .debug_line    0x0000000000005097     0x6941 /tmp/ccBpjNNX.o
+ .debug_line    0x000000000000b9d8     0x16cf /tmp/ccA2VEjc.o
+ .debug_line    0x000000000000d0a7     0x23f8 /tmp/ccXbgpar.o
+ .debug_line    0x000000000000f49f      0x506 /tmp/cc49NtgG.o
+ .debug_line    0x000000000000f9a5     0x7854 /tmp/ccMB9BmX.o
+ .debug_line    0x00000000000171f9     0x11d1 /tmp/ccYeqwVe.o
+ .debug_line    0x00000000000183ca      0x19b /tmp/cclikmww.o
+ .debug_line    0x0000000000018565     0x2f2e /tmp/ccNdCbqO.o
+ .debug_line    0x000000000001b493     0x1043 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(adddf3.o)
+ .debug_line    0x000000000001c4d6      0xf99 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divdf3.o)
+ .debug_line    0x000000000001d46f      0x28c /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(eqdf2.o)
+ .debug_line    0x000000000001d6fb      0x321 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(gedf2.o)
+ .debug_line    0x000000000001da1c      0x321 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(ledf2.o)
+ .debug_line    0x000000000001dd3d      0xdd4 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(muldf3.o)
+ .debug_line    0x000000000001eb11     0x10a2 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(subdf3.o)
+ .debug_line    0x000000000001fbb3      0x243 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixdfsi.o)
+ .debug_line    0x000000000001fdf6      0x1d4 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixunsdfsi.o)
+ .debug_line    0x000000000001ffca      0x29d /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsidf.o)
+ .debug_line    0x0000000000020267      0x880 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divsf3.o)
+ .debug_line    0x0000000000020ae7      0x36c /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsisf.o)
+ .debug_line    0x0000000000020e53      0x3d7 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(extendsfdf2.o)
+ .debug_line    0x000000000002122a      0x29f /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clzsi2.o)
+ .debug_line    0x00000000000214c9      0x213 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clz.o)
+
+.debug_str      0x0000000000000000     0x1bb6
+ .debug_str     0x0000000000000000      0x457 /tmp/ccrMuQlw.o
+                                        0x4dc (size before relaxing)
+ .debug_str     0x0000000000000457      0x15f /tmp/ccspqRAJ.o
+                                        0x455 (size before relaxing)
+ .debug_str     0x00000000000005b6       0xab /tmp/ccBpjNNX.o
+                                        0x2dd (size before relaxing)
+ .debug_str     0x0000000000000661      0x117 /tmp/ccA2VEjc.o
+                                        0x346 (size before relaxing)
+ .debug_str     0x0000000000000778       0x6a /tmp/ccXbgpar.o
+                                        0x283 (size before relaxing)
+ .debug_str     0x00000000000007e2       0xfb /tmp/cc49NtgG.o
+                                        0x3da (size before relaxing)
+ .debug_str     0x00000000000008dd      0x148 /tmp/ccMB9BmX.o
+                                        0x360 (size before relaxing)
+ .debug_str     0x0000000000000a25      0x434 /tmp/ccYeqwVe.o
+                                        0x615 (size before relaxing)
+ .debug_str     0x0000000000000e59       0x3a /tmp/cclikmww.o
+                                         0x76 (size before relaxing)
+ .debug_str     0x0000000000000e93      0x165 /tmp/ccNdCbqO.o
+                                        0x324 (size before relaxing)
+ .debug_str     0x0000000000000ff8      0x2a6 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(adddf3.o)
+                                        0x32c (size before relaxing)
+ .debug_str     0x000000000000129e      0x1de /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divdf3.o)
+                                        0x3ee (size before relaxing)
+ .debug_str     0x000000000000147c       0x53 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(eqdf2.o)
+                                        0x246 (size before relaxing)
+ .debug_str     0x00000000000014cf       0x58 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(gedf2.o)
+                                        0x26a (size before relaxing)
+ .debug_str     0x0000000000001527       0x34 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(ledf2.o)
+                                        0x26a (size before relaxing)
+ .debug_str     0x000000000000155b      0x15b /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(muldf3.o)
+                                        0x446 (size before relaxing)
+ .debug_str     0x00000000000016b6       0x36 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(subdf3.o)
+                                        0x32c (size before relaxing)
+ .debug_str     0x00000000000016ec       0x53 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixdfsi.o)
+                                        0x243 (size before relaxing)
+ .debug_str     0x000000000000173f       0x3e /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixunsdfsi.o)
+                                        0x242 (size before relaxing)
+ .debug_str     0x000000000000177d       0x6d /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsidf.o)
+                                        0x2d6 (size before relaxing)
+ .debug_str     0x00000000000017ea      0x116 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divsf3.o)
+                                        0x359 (size before relaxing)
+ .debug_str     0x0000000000001900       0x55 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsisf.o)
+                                        0x2b7 (size before relaxing)
+ .debug_str     0x0000000000001955       0x4d /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(extendsfdf2.o)
+                                        0x267 (size before relaxing)
+ .debug_str     0x00000000000019a2      0x214 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clzsi2.o)
+                                        0x7ca (size before relaxing)
+ .debug_str     0x0000000000001bb6      0x7ad /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clz.o)
+
+.comment        0x0000000000000000       0x11
+ .comment       0x0000000000000000       0x11 /tmp/ccrMuQlw.o
+                                         0x12 (size before relaxing)
+ .comment       0x0000000000000011       0x12 /tmp/ccspqRAJ.o
+ .comment       0x0000000000000011       0x12 /tmp/ccBpjNNX.o
+ .comment       0x0000000000000011       0x12 /tmp/ccA2VEjc.o
+ .comment       0x0000000000000011       0x12 /tmp/ccXbgpar.o
+ .comment       0x0000000000000011       0x12 /tmp/cc49NtgG.o
+ .comment       0x0000000000000011       0x12 /tmp/ccMB9BmX.o
+ .comment       0x0000000000000011       0x12 /tmp/ccYeqwVe.o
+ .comment       0x0000000000000011       0x12 /tmp/ccNdCbqO.o
+ .comment       0x0000000000000011       0x12 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/../../../../riscv32-unknown-elf/lib/libm.a(lib_a-s_modf.o)
+ .comment       0x0000000000000011       0x12 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(adddf3.o)
+ .comment       0x0000000000000011       0x12 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divdf3.o)
+ .comment       0x0000000000000011       0x12 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(eqdf2.o)
+ .comment       0x0000000000000011       0x12 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(gedf2.o)
+ .comment       0x0000000000000011       0x12 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(ledf2.o)
+ .comment       0x0000000000000011       0x12 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(muldf3.o)
+ .comment       0x0000000000000011       0x12 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(subdf3.o)
+ .comment       0x0000000000000011       0x12 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixdfsi.o)
+ .comment       0x0000000000000011       0x12 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixunsdfsi.o)
+ .comment       0x0000000000000011       0x12 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsidf.o)
+ .comment       0x0000000000000011       0x12 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divsf3.o)
+ .comment       0x0000000000000011       0x12 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsisf.o)
+ .comment       0x0000000000000011       0x12 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(extendsfdf2.o)
+ .comment       0x0000000000000011       0x12 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clzsi2.o)
+ .comment       0x0000000000000011       0x12 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clz.o)
+
+.riscv.attributes
+                0x0000000000000000       0x26
+ .riscv.attributes
+                0x0000000000000000       0x26 /tmp/ccrMuQlw.o
+ .riscv.attributes
+                0x0000000000000026       0x26 /tmp/ccspqRAJ.o
+ .riscv.attributes
+                0x000000000000004c       0x26 /tmp/ccBpjNNX.o
+ .riscv.attributes
+                0x0000000000000072       0x26 /tmp/ccA2VEjc.o
+ .riscv.attributes
+                0x0000000000000098       0x26 /tmp/ccXbgpar.o
+ .riscv.attributes
+                0x00000000000000be       0x26 /tmp/cc49NtgG.o
+ .riscv.attributes
+                0x00000000000000e4       0x26 /tmp/ccMB9BmX.o
+ .riscv.attributes
+                0x000000000000010a       0x26 /tmp/ccYeqwVe.o
+ .riscv.attributes
+                0x0000000000000130       0x24 /tmp/cclikmww.o
+ .riscv.attributes
+                0x0000000000000154       0x26 /tmp/ccNdCbqO.o
+ .riscv.attributes
+                0x000000000000017a       0x26 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/../../../../riscv32-unknown-elf/lib/libm.a(lib_a-s_modf.o)
+ .riscv.attributes
+                0x00000000000001a0       0x26 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(adddf3.o)
+ .riscv.attributes
+                0x00000000000001c6       0x26 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divdf3.o)
+ .riscv.attributes
+                0x00000000000001ec       0x26 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(eqdf2.o)
+ .riscv.attributes
+                0x0000000000000212       0x26 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(gedf2.o)
+ .riscv.attributes
+                0x0000000000000238       0x26 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(ledf2.o)
+ .riscv.attributes
+                0x000000000000025e       0x26 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(muldf3.o)
+ .riscv.attributes
+                0x0000000000000284       0x26 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(subdf3.o)
+ .riscv.attributes
+                0x00000000000002aa       0x26 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixdfsi.o)
+ .riscv.attributes
+                0x00000000000002d0       0x26 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixunsdfsi.o)
+ .riscv.attributes
+                0x00000000000002f6       0x26 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsidf.o)
+ .riscv.attributes
+                0x000000000000031c       0x26 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divsf3.o)
+ .riscv.attributes
+                0x0000000000000342       0x26 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsisf.o)
+ .riscv.attributes
+                0x0000000000000368       0x26 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(extendsfdf2.o)
+ .riscv.attributes
+                0x000000000000038e       0x26 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clzsi2.o)
+ .riscv.attributes
+                0x00000000000003b4       0x26 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clz.o)
+
+.debug_frame    0x0000000000000000      0xb7c
+ .debug_frame   0x0000000000000000      0x1a0 /tmp/ccrMuQlw.o
+ .debug_frame   0x00000000000001a0       0x94 /tmp/ccspqRAJ.o
+ .debug_frame   0x0000000000000234      0x1f4 /tmp/ccBpjNNX.o
+ .debug_frame   0x0000000000000428       0x84 /tmp/ccA2VEjc.o
+ .debug_frame   0x00000000000004ac       0x70 /tmp/ccXbgpar.o
+ .debug_frame   0x000000000000051c      0x114 /tmp/cc49NtgG.o
+ .debug_frame   0x0000000000000630       0x90 /tmp/ccMB9BmX.o
+ .debug_frame   0x00000000000006c0       0xa0 /tmp/ccYeqwVe.o
+ .debug_frame   0x0000000000000760      0x13c /tmp/ccNdCbqO.o
+ .debug_frame   0x000000000000089c       0x44 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(adddf3.o)
+ .debug_frame   0x00000000000008e0       0x58 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divdf3.o)
+ .debug_frame   0x0000000000000938       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(eqdf2.o)
+ .debug_frame   0x0000000000000958       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(gedf2.o)
+ .debug_frame   0x0000000000000978       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(ledf2.o)
+ .debug_frame   0x0000000000000998       0x54 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(muldf3.o)
+ .debug_frame   0x00000000000009ec       0x44 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(subdf3.o)
+ .debug_frame   0x0000000000000a30       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixdfsi.o)
+ .debug_frame   0x0000000000000a50       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(fixunsdfsi.o)
+ .debug_frame   0x0000000000000a70       0x34 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsidf.o)
+ .debug_frame   0x0000000000000aa4       0x4c /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(divsf3.o)
+ .debug_frame   0x0000000000000af0       0x34 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(floatunsisf.o)
+ .debug_frame   0x0000000000000b24       0x38 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(extendsfdf2.o)
+ .debug_frame   0x0000000000000b5c       0x20 /home/matan/projects/riscv-tools/lib/gcc/riscv32-unknown-elf/9.2.0/libgcc.a(_clzsi2.o)

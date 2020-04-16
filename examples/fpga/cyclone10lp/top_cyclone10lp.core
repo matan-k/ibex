@@ -1,0 +1,50 @@
+CAPI=2:
+# Copyright lowRISC contributors.
+# Licensed under the Apache License, Version 2.0, see LICENSE for details.
+# SPDX-License-Identifier: Apache-2.0
+name: "lowrisc:ibex:top_cyclone10lp:0.1"
+description: "Ibex example toplevel for cyclone10LP on EVB kit"
+filesets:
+  files_rtl_cyclone10lp:
+    depend:
+      - lowrisc:ibex:ibex_core
+      - lowrisc:ibex:fpga_intel_shared
+    files:
+      - rtl/top_cyclone10lp.sv
+    file_type: systemVerilogSource
+
+  files_constraints:
+    files:
+      - data/pins_cyclone10lp.qsf
+    file_type: tclSource
+
+  memory:
+    files:
+      - /home/matan/projects/matank-ibex/ibex/examples/sw/led/led.mif
+    file_type: memory
+
+parameters:
+  # XXX: This parameter needs to be absolute, or relative to the *.runs/synth_1
+  # directory. It's best to pass it as absolute path when invoking fusesoc, e.g.
+  # --SRAM_INIT_FILE=$PWD/sw/led/led.vmem
+  # XXX: The VMEM file should be added to the sources of the quartus project to
+  # make the quartus dependency tracking work. However this requires changes to
+  # fusesoc first.
+  SRAM_INIT_FILE:
+    datatype: str
+    description: SRAM initialization file in vmem hex format
+    default: "../../../../../examples/sw/led/led.vmem"
+    paramtype: vlogdefine
+
+targets:
+  synth:
+    default_tool: quartus
+    filesets:
+      - files_rtl_cyclone10lp
+      - files_constraints
+    toplevel: top_cyclone10lp
+    parameters:
+      - SRAM_INIT_FILE
+    tools:
+      quartus:
+        device: "10CL025YU256I7G"  # Default to Cyclone10LP evaluation kit

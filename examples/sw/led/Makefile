@@ -23,7 +23,7 @@ CFLAGS ?= -march=$(ARCH) -mabi=ilp32 -static -mcmodel=medany \
 OBJS := ${SRCS:.c=.o} ${CRT:.S=.o}
 DEPS = $(OBJS:%.o=%.d)
 
-OUTFILES = $(PROGRAM).elf $(PROGRAM).vmem $(PROGRAM).bin $(PROGRAM).dis
+OUTFILES = $(PROGRAM).elf $(PROGRAM).vmem $(PROGRAM).hex $(PROGRAM).mif $(PROGRAM).bin $(PROGRAM).dis
 
 all: $(OUTFILES)
 
@@ -41,7 +41,13 @@ $(PROGRAM).elf: $(OBJS) $(LINKER_SCRIPT)
 # read from the elf file, but is lost in the bin file.
 # Switching to objcopy will resolve that as well.
 %.vmem: %.bin
-	srec_cat $^ -binary -offset 0x0000 -byte-swap 4 -o $@ -vmem
+	srec_cat $^ -binary -offset 0x0000 -byte-swap 4 -o $@ -vmem 
+
+%.hex: %.bin
+	srec_cat $^ -binary -offset 0x0000 -byte-swap 4 -o $@ -Intel
+
+%.mif: %.bin
+	srec_cat $^ -binary -offset 0x0000 -byte-swap 4 -o $@ -mif  
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $^ $@

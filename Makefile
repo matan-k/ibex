@@ -8,7 +8,7 @@ help:
 
 # Use a parallel run (make -j N) for a faster build
 build-all: build-riscv-compliance build-simple-system build-arty-100 \
-      build-csr-test run-coremark
+      build-csr-test run-coremark build-cyclone program-cyclone
 
 
 # RISC-V compliance
@@ -27,7 +27,8 @@ build-simple-system:
 	fusesoc --cores-root=. run --target=sim --setup --build \
 		lowrisc:ibex:ibex_simple_system
 
-simple-system-program = examples/sw/simple_system/hello_test/hello_test.vmem
+# simple-system-program = examples/sw/simple_system/hello_test/hello_test.vmem
+simple-system-program = examples/sw/led/led.hex
 sw-simple-hello: $(simple-system-program)
 
 .PHONY: $(simple-system-program)
@@ -48,6 +49,27 @@ run-simple-system: sw-simple-hello | $(Vibex_simple_system)
 run-coremark: 
 	make -C ./examples/sw/benchmarks/coremark/
 	build/lowrisc_ibex_ibex_simple_system_0/sim-verilator/Vibex_simple_system --meminit=ram,examples/sw/benchmarks/coremark/coremark.elf 
+
+# Cyclone10lp FPGA example
+# Use the following targets (depending on your hardware):
+# - "build-cyclone"
+# - "program-cyclone"
+cyclone-sw-program = examples/sw/led/led.vmem
+cyclone_sw-led: $(cyclone-sw-program)
+
+.PHONY: $(cyclone-sw-program)
+$(cyclone-sw-program):
+	cd examples/sw/led && $(MAKE)
+
+.PHONY: build-cyclone
+build-cyclone: cyclone_sw-led
+	fusesoc --cores-root=. run --target=synth --setup --build \
+		lowrisc:ibex:top_cyclone10lp --device 10CL025YU256I7G --family "Cyclone 10LP"
+
+.PHONY: program-cyclone
+program-cyclone:
+	fusesoc --cores-root=. run --target=synth --run \
+		lowrisc:ibex:top_cyclone10lp
 
 # Arty A7 FPGA example
 # Use the following targets (depending on your hardware):

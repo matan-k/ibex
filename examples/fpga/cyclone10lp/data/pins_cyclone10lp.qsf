@@ -1,0 +1,27 @@
+## Based on https://github.com/Digilent/digilent-xdc/blob/master/Arty-A7-100-Master.xdc
+## This file is a general .xdc for the Arty A7-100 Rev. D
+## To use it in a project:
+## - uncomment the lines corresponding to used pins
+## - rename the used ports (in each line, after get_ports) according to the top level signal names in the project
+
+set_global_assignment -name MIF_FILE /home/matan/projects/matank-ibex/ibex/examples/sw/led/led.mif
+
+## Clock signal
+set_location_assignment PIN_E1 -to IO_CLK
+
+## LEDs
+set_location_assignment PIN_J13 -to LED[3]
+set_location_assignment PIN_J14 -to LED[2]
+set_location_assignment PIN_K15 -to LED[1]
+set_location_assignment PIN_L14 -to LED[0]
+
+## Buttons
+#set_location_assignment PIN_D9 -to PB[3]
+#set_location_assignment PIN_C11 -to PB[2]
+#set_location_assignment PIN_F14 -to PB[1]
+#set_location_assignment PIN_E15 -to PB[0]
+
+## Misc. ChipKit Ports
+set_location_assignment PIN_J15 -to IO_RST_N
+
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 1

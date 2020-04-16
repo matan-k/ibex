@@ -21,8 +21,10 @@ module ram_1p #(
 );
 
   localparam int Aw = $clog2(Depth);
+  // const string MEM_FILE = "/home/matan/projects/matank-ibex/ibex/examples/sw/led/led.vmem";
+  // const string MEM_FILE = "../../../../../examples/sw/led/led.vmem";
 
-  logic [31:0] mem [Depth];
+  logic [31:0] mem [Depth]  /*synthesis ram_init_file = "led.mif"  */;
 
   logic [Aw-1:0] addr_idx;
   assign addr_idx = addr_i[Aw-1+2:2];
@@ -75,10 +77,11 @@ module ram_1p #(
   `endif
 
   `ifdef SRAM_INIT_FILE
-    localparam MEM_FILE = `"`SRAM_INIT_FILE`";
-    initial begin
-      $display("Initializing SRAM from %s", MEM_FILE);
-      $readmemh(MEM_FILE, mem);
-    end
+    // localparam MEM_FILE = `"`SRAM_INIT_FILE`";
+    localparam MEM_FILE = "/home/matan/projects/matank-ibex/ibex/examples/sw/led/led.mif";
+    // initial begin
+      // $display("Initializing SRAM from %s", MEM_FILE);
+      // $readmemh(/*MEM_FILE*/"/home/matan/projects/matank-ibex/ibex/examples/sw/led/led.mif", mem);
+    // end
   `endif
 endmodule
