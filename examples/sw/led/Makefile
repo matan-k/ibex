@@ -8,7 +8,7 @@ PROGRAM ?= led
 PROGRAM_CFLAGS = -Wall -g -Os
 ARCH = rv32imc
 # ARCH = rv32im # to disable compressed instructions
-SRCS = $(PROGRAM).c
+SRCS = $(PROGRAM).c simple_system_common.c strings.c 
 
 CC = riscv32-unknown-elf-gcc
 
@@ -47,7 +47,7 @@ $(PROGRAM).elf: $(OBJS) $(LINKER_SCRIPT)
 	srec_cat $^ -binary -offset 0x0000 -byte-swap 4 -o $@ -Intel
 
 %.mif: %.bin
-	srec_cat $^ -binary -offset 0x0000 -byte-swap 4 -o $@ -mif  
+	srec_cat $^ -binary -offset 0x0000 -byte-swap 4 -o $@ -mif 32 
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $^ $@

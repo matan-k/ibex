@@ -1,76 +1,68 @@
+/* Copyright lowRISC contributors.
+   Licensed under the Apache License, Version 2.0, see LICENSE for details.
+   SPDX-License-Identifier: Apache-2.0 */
+
 OUTPUT_ARCH(riscv)
 
 /* required to correctly link newlib */
 GROUP( -lc -lgloss -lgcc -lsupc++ )
 
 SEARCH_DIR(.)
+
 __DYNAMIC  =  0;
 
 MEMORY
 {
-    rom         : ORIGIN = 0x00000000, LENGTH = 0xC000 /* 48 kB */
-    stack       : ORIGIN = 0x0000C000, LENGTH = 0x4000 /* 16 kB */
+    /* 992 kB should be enough for anybody... */
+    ram         : ORIGIN = 0x00000000, LENGTH = 0xC000 /* 48 kB */
+    stack       : ORIGIN = 0x0000C000, LENGTH = 0x1000  /* 4 kB */
 }
 
 /* Stack information variables */
-_min_stack      = 0x2000;   /* 8K - minimum stack space to reserve */
+_min_stack      = 0x0200;   /* 8K - minimum stack space to reserve */
 _stack_len     = LENGTH(stack);
 _stack_start   = ORIGIN(stack) + LENGTH(stack);
 
-/* We have to align each sector to word boundaries as our current s19->slm
- * conversion scripts are not able to handle non-word aligned sections. */
+_entry_point = _vectors_start + 0x80;
+ENTRY(_entry_point)
+
+/* The tohost address is used by Spike for a magic "stop me now" message. This
+   is set to equal SIM_CTRL_CTRL (see simple_system_regs.h), which has that
+   effect in simple_system simulations. Note that it must be 8-byte aligned.
+
+   We don't read data back from Spike, so fromhost is set to some dummy value:
+   we place it just above the top of the stack.
+ */
+tohost   = 0x20008;
+fromhost = _stack_start + 0x10;
 
 SECTIONS
 {
     .vectors :
     {
         . = ALIGN(4);
+		_vectors_start = .;
         KEEP(*(.vectors))
-    } > rom
+		_vectors_end = .;
+    } > ram
 
     .text : {
         . = ALIGN(4);
-        _stext = .;
         *(.text)
         *(.text.*)
-        _etext  =  .;
-        __CTOR_LIST__ = .;
-        LONG((__CTOR_END__ - __CTOR_LIST__) / 4 - 2)
-        *(.ctors)
-        LONG(0)
-        __CTOR_END__ = .;
-        __DTOR_LIST__ = .;
-        LONG((__DTOR_END__ - __DTOR_LIST__) / 4 - 2)
-        *(.dtors)
-        LONG(0)
-        __DTOR_END__ = .;
-        *(.lit)
-        *(.shdata)
-        . = ALIGN(4);
-        _endtext = .;
-    }  > rom
+    }  > ram
 
     .rodata : {
         . = ALIGN(4);
         *(.rodata);
         *(.rodata.*)
-    } > rom
-
-    .shbss :
-    {
-        . = ALIGN(4);
-        *(.shbss)
-    } > rom
+    } > ram
 
     .data : {
         . = ALIGN(4);
-        sdata  =  .;
-        _sdata  =  .;
         *(.data);
         *(.data.*)
-        edata  =  .;
-        _edata  =  .;
-    } > rom
+    } > ram
 
     .bss :
     {
@@ -78,11 +70,9 @@ SECTIONS
         _bss_start = .;
         *(.bss)
         *(.bss.*)
-        *(.sbss)
-        *(.sbss.*)
         *(COMMON)
         _bss_end = .;
-    } > rom
+    } > ram
 
     /* ensure there is enough room for stack */
     .stack (NOLOAD): {
@@ -92,14 +82,4 @@ SECTIONS
         stack = . ;
         _stack = . ;
     } > stack
-
-    .stab  0 (NOLOAD) :
-    {
-        [ .stab ]
-    }
-
-    .stabstr  0 (NOLOAD) :
-    {
-        [ .stabstr ]
-    }
 }

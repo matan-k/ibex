@@ -20,7 +20,7 @@ filesets:
 
   memory:
     files:
-      - /home/matan/projects/matank-ibex/ibex/examples/sw/led/led.mif
+      - /home/matan/projects/matank-ibex/ibex/examples/sw/simple_system/hello_test/hello_test.mif
     file_type: memory
 
 parameters:
