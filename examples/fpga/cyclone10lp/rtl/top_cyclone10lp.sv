@@ -65,22 +65,6 @@ module top_cyclone10lp (
 
   // LED events
   logic led_event;
-  logic [31:0] timer;
-  logic fetch_ena;
-  logic [31:0] print_counter;
-
-  // always_ff @(posedge IO_CLK or negedge IO_RST_N) begin 
-  //   if(~IO_RST_N) begin
-  //     timer <= 0;
-  //     fetch_ena <= 0;
-  //   end else begin
-  //     timer <= timer + 1;
-  //     if(timer == 50000000) begin
-  //       fetch_ena <= 1;
-  //     end
-  //   end
-  // end
-
 
   ibex_core #(
      .DmHaltAddr(32'h00000000),
@@ -198,16 +182,7 @@ module top_cyclone10lp (
     end
   end
 
-  always_ff @(posedge IO_CLK or negedge IO_RST_N) begin
-    if(~IO_RST_N) begin
-      print_counter <= 0;
-    end else begin
-      if(print_counter < 500 && instr_gnt)  begin
-        print_counter <= print_counter + 1;
-      end
-    end
-  end
-
+  // On-chip ROM -----
   // jtag_bridge memories_and_jtag (
   //   .clk_clk           (IO_CLK),           //    clk.clk
   //   .reset_reset_n     (IO_RST_N),     //  reset.reset_n
@@ -230,7 +205,10 @@ module top_cyclone10lp (
   //   .ram_if_writedata  (data_mem_wdata),  //       .writedata
   //   .ram_if_byteenable (data_mem_be), //       .byteenable
   // );
+  // ------
 
+
+  // ROM on external flash -----
   epcq_and_ram u0 (
     .clk_clk              (IO_CLK),              //      clk.clk
     .reset_reset_n        (IO_RST_N),        //    reset.reset_n
@@ -255,35 +233,33 @@ module top_cyclone10lp (
     .ram_if_writedata     (data_mem_wdata),     //         .writedata
     .ram_if_byteenable    (data_mem_be),    //         .byteenable
 
-    //DEBUG
-    // .ram_if_address       (print_counter),       //   ram_if.address
-    // .ram_if_chipselect    (instr_mem_req),    //         .chipselect
-    // .ram_if_clken         ('1),         //         .clken
-    // .ram_if_write         (instr_mem_read),         //         .write
-    // .ram_if_readdata      (),      //         .readdata
-    // .ram_if_writedata     (instr_mem_addr_endianity_fix),     //         .writedata
-    // .ram_if_byteenable    ('1),    //         .byteenable
-
     .ctrl_irq_irq         ()          // ctrl_irq.irq
   );
+  // -----
 
   //SRAM to Ibex
   assign instr_rdata    = instr_mem_rdata_s;
-  assign instr_rvalid   = instr_mem_rvalid_s;
   assign data_rdata     = data_mem_rdata;
+
+  // External flash ROM ----
+  assign instr_rvalid   = instr_mem_rvalid_s;
+  // -----
+
   always_ff @(posedge IO_CLK or negedge IO_RST_N) begin
     if (!IO_RST_N) begin
       instr_gnt       <= 'b0;
-      // instr_rvalid    <= 'b0;
       data_gnt        <= 'b0;
       data_rvalid     <= 'b0;
+
+      // On chip ROM -----
+      // instr_rvalid    <= 'b0;
+      // -----
     end else begin
       // On-chip ROM -----
       // instr_gnt       <= instr_req && instr_mem_req;
       // instr_rvalid    <= instr_req && instr_mem_req;
       // ---
 
-       // Wait might cause a problem!!!
       instr_gnt       <= instr_req && instr_mem_req && ~instr_mem_wait;
       data_gnt        <= data_req && data_mem_req;
       data_rvalid     <= data_req && data_mem_req;
@@ -293,12 +269,10 @@ module top_cyclone10lp (
   //Connect the LED output to the lower four bits of the most significant
   //byte
   logic [3:0] leds;
-  logic sample_gnt;
 
   always_ff @(posedge IO_CLK or negedge IO_RST_N) begin
     if (!IO_RST_N) begin
       leds <= 4'b0;
-      sample_gnt <= 1'b0;
     end else begin
       if (led_event && data_req && data_we) begin
         for (int i = 0; i < 4; i = i + 1) begin
@@ -307,20 +281,8 @@ module top_cyclone10lp (
           end
         end
       end
-      if(instr_gnt) begin
-        sample_gnt <= 1'b1;
-      end
     end
   end
   assign LED_N[3:0] = leds[3:0];
-
-  // Clock and reset
-  // clkgen_xil7series
-  //   clkgen(
-  //     .IO_CLK,
-  //     .IO_RST_N,
-  //     .IO_CLK,
-  //     .IO_RST_N
-  //   );
 
 endmodule
