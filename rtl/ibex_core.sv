@@ -343,12 +343,12 @@ module ibex_core #(
 		.ena    (clock_en),    //                  .ena
 		.outclk (clk)  // altclkctrl_output.outclk
 	);
-  /*prim_clock_gating core_clock_gate_i (
-      .clk_i     ( clk_i           ),
-      .en_i      ( clock_en        ),
-      .test_en_i ( test_en_i       ),
-      .clk_o     ( clk             )
-  );*/
+  // prim_clock_gating core_clock_gate_i (
+  //     .clk_i     ( clk_i           ),
+  //     .en_i      ( clock_en        ),
+  //     .test_en_i ( test_en_i       ),
+  //     .clk_o     ( clk             )
+  // );
 
   //////////////
   // IF stage //

@@ -39,6 +39,19 @@ module top_cyclone10lp (
   logic        instr_mem_rvalid;
   logic [31:0] instr_mem_rdata;
   logic        instr_mem_read;
+  logic        instr_mem_wait;
+  logic [31:0] instr_mem_rdata_endianity_fix;
+  logic [31:0] instr_mem_addr_endianity_fix;
+
+  // Sampled ROM arbiter (for ROM on external Flash)
+  logic [31:0] instr_mem_addr_s;
+  logic        instr_mem_write_s;
+  logic  [3:0] instr_mem_be_s;
+  logic [31:0] instr_mem_wdata_s;
+  logic        instr_mem_rvalid_s;
+  logic [31:0] instr_mem_rdata_s;
+  logic        instr_mem_read_s;
+  logic        instr_mem_wait_s; 
 
   // RAM arbiter
   logic [31:0] data_mem_addr;
@@ -52,6 +65,21 @@ module top_cyclone10lp (
 
   // LED events
   logic led_event;
+  logic [31:0] timer;
+  logic fetch_ena;
+  logic [31:0] print_counter;
+
+  // always_ff @(posedge IO_CLK or negedge IO_RST_N) begin 
+  //   if(~IO_RST_N) begin
+  //     timer <= 0;
+  //     fetch_ena <= 0;
+  //   end else begin
+  //     timer <= timer + 1;
+  //     if(timer == 50000000) begin
+  //       fetch_ena <= 1;
+  //     end
+  //   end
+  // end
 
 
   ibex_core #(
@@ -96,11 +124,44 @@ module top_cyclone10lp (
      .core_sleep_o          ()
   );
 
+  // Sample the interface for timing closure
+  always_ff @(posedge IO_CLK or negedge IO_RST_N) begin
+    if(~IO_RST_N) begin
+      instr_mem_addr_s <= '0;
+      instr_mem_write_s <= '0;
+      instr_mem_be_s <= '0;
+      instr_mem_wdata_s <= '0;
+      instr_mem_rvalid_s <= '0;
+      instr_mem_rdata_s <= '0;
+      instr_mem_read_s <= '0;
+    end else begin
+      // if (!instr_mem_wait) begin
+        instr_mem_addr_s <= instr_mem_addr;
+        instr_mem_write_s <= instr_mem_write;
+        instr_mem_be_s <= instr_mem_be;
+        instr_mem_wdata_s <= instr_mem_wdata;
+        instr_mem_rvalid_s <= instr_mem_rvalid;
+        instr_mem_rdata_s <= instr_mem_rdata_endianity_fix;
+        // instr_mem_rdata_s <= instr_mem_rdata;
+        instr_mem_read_s <= instr_mem_read;
+      // end
+    end
+  end
+
+  genvar i;
+  generate
+    for (i = 0; i < 4; i++) begin : endianity_fix
+      assign instr_mem_rdata_endianity_fix[(i+1)*8-1: i*8] = instr_mem_rdata[(4-i)*8-1 : (3-i)*8];
+      assign instr_mem_addr_endianity_fix[(i+1)*8-1: i*8] = instr_mem_addr[(4-i)*8-1 : (3-i)*8];
+    end
+  endgenerate
+
   //Connect Ibex to SRAM
   always_comb begin
     instr_mem_req        = 1'b0;
     instr_mem_addr       = 32'b0;
     instr_mem_write      = 1'b0;
+    instr_mem_read      = 1'b0;
     instr_mem_be         = 4'b0;
     instr_mem_wdata      = 32'b0;
     data_mem_req        = 1'b0;
@@ -110,10 +171,20 @@ module top_cyclone10lp (
     data_mem_wdata      = 32'b0;
     led_event           = 1'b0;
 
+    // assign instr_mem_read = instr_mem_req;
+
     // ROM assignments
     if (instr_req) begin
+      // On-chip ROM ------
+      // instr_mem_req        = (instr_addr & ~MEM_MASK) == MEM_START;
+      // instr_mem_addr       = instr_addr / 4;
+      // ------
+
+      // Flash ROM -----
       instr_mem_req        = (instr_addr & ~MEM_MASK) == MEM_START;
       instr_mem_addr       = instr_addr / 4;
+      instr_mem_read       = instr_mem_req;
+      // -----
     end 
 
     // RAM assignments
@@ -127,49 +198,93 @@ module top_cyclone10lp (
     end
   end
 
- //  on_chip_mem mem_inst (
-	// 	.clk_clk           (IO_CLK),           //    clk.clk
-	// 	.reset_reset_n     (IO_RST_N),     //  reset.reset_n
-	// 	.mem_if_address    (mem_addr),    // mem_if.address
-	// 	.mem_if_clken      ('1),      //       .clken
-	// 	.mem_if_chipselect ('1), //       .chipselect
-	// 	.mem_if_write      (mem_write),      //       .write
-	// 	.mem_if_readdata   (mem_rdata),   //       .readdata
-	// 	.mem_if_writedata  (mem_wdata),  //       .writedata
-	// 	.mem_if_byteenable (mem_be)  //       .byteenable
-	// );
+  always_ff @(posedge IO_CLK or negedge IO_RST_N) begin
+    if(~IO_RST_N) begin
+      print_counter <= 0;
+    end else begin
+      if(print_counter < 500 && instr_gnt)  begin
+        print_counter <= print_counter + 1;
+      end
+    end
+  end
 
-  jtag_bridge memories_and_jtag (
-    .clk_clk           (IO_CLK),           //    clk.clk
-    .reset_reset_n     (IO_RST_N),     //  reset.reset_n
-    .ram_if_address    (data_mem_addr),    // ram_if.address
-    .ram_if_chipselect (data_mem_req), //       .chipselect
-    .ram_if_clken      ('1),      //       .clken
-    .ram_if_write      (data_mem_write),      //       .write
-    .ram_if_readdata   (data_mem_rdata),   //       .readdata
-    .ram_if_writedata  (data_mem_wdata),  //       .writedata
-    .ram_if_byteenable (data_mem_be), //       .byteenable
-    .rom_if_address    (instr_mem_addr),    // rom_if.address
-    .rom_if_chipselect (instr_mem_req), //       .chipselect
-    .rom_if_clken      ('1),      //       .clken
-    .rom_if_write      (instr_mem_write),      //       .write
-    .rom_if_readdata   (instr_mem_rdata),   //       .readdata
-    .rom_if_writedata  (instr_mem_wdata),  //       .writedata
-    .rom_if_byteenable (instr_mem_be)  //       .byteenable
+  // jtag_bridge memories_and_jtag (
+  //   .clk_clk           (IO_CLK),           //    clk.clk
+  //   .reset_reset_n     (IO_RST_N),     //  reset.reset_n
+
+  //   //ROM
+  //   .rom_if_address    (instr_mem_addr),    // rom_if.address
+  //   .rom_if_chipselect (instr_mem_req), //       .chipselect
+  //   .rom_if_clken      ('1),      //       .clken
+  //   .rom_if_write      (instr_mem_write),      //       .write
+  //   .rom_if_readdata   (instr_mem_rdata),   //       .readdata
+  //   .rom_if_writedata  (instr_mem_wdata),  //       .writedata
+  //   .rom_if_byteenable (instr_mem_be)  //       .byteenable
+
+  //   //RAM
+  //   .ram_if_address    (data_mem_addr),    // ram_if.address
+  //   .ram_if_chipselect (data_mem_req), //       .chipselect
+  //   .ram_if_clken      ('1),      //       .clken
+  //   .ram_if_write      (data_mem_write),      //       .write
+  //   .ram_if_readdata   (data_mem_rdata),   //       .readdata
+  //   .ram_if_writedata  (data_mem_wdata),  //       .writedata
+  //   .ram_if_byteenable (data_mem_be), //       .byteenable
+  // );
+
+  epcq_and_ram u0 (
+    .clk_clk              (IO_CLK),              //      clk.clk
+    .reset_reset_n        (IO_RST_N),        //    reset.reset_n
+
+    // ROM
+    .rom_if_write         (instr_mem_write_s),         //   rom_if.write
+    .rom_if_burstcount    (1'b1),    //         .burstcount
+    .rom_if_waitrequest   (instr_mem_wait),   //         .waitrequest
+    .rom_if_read          (instr_mem_read_s),          //         .read
+    .rom_if_address       (instr_mem_addr_s),       //         .address
+    .rom_if_writedata     (instr_mem_wdata_s),     //         .writedata
+    .rom_if_readdata      (instr_mem_rdata),      //         .readdata
+    .rom_if_readdatavalid (instr_mem_rvalid), //         .readdatavalid
+    .rom_if_byteenable    (instr_mem_be_s),    //         .byteenable
+    
+    // RAM
+    .ram_if_address       (data_mem_addr),       //   ram_if.address
+    .ram_if_chipselect    (data_mem_req),    //         .chipselect
+    .ram_if_clken         ('1),         //         .clken
+    .ram_if_write         (data_mem_write),         //         .write
+    .ram_if_readdata      (data_mem_rdata),      //         .readdata
+    .ram_if_writedata     (data_mem_wdata),     //         .writedata
+    .ram_if_byteenable    (data_mem_be),    //         .byteenable
+
+    //DEBUG
+    // .ram_if_address       (print_counter),       //   ram_if.address
+    // .ram_if_chipselect    (instr_mem_req),    //         .chipselect
+    // .ram_if_clken         ('1),         //         .clken
+    // .ram_if_write         (instr_mem_read),         //         .write
+    // .ram_if_readdata      (),      //         .readdata
+    // .ram_if_writedata     (instr_mem_addr_endianity_fix),     //         .writedata
+    // .ram_if_byteenable    ('1),    //         .byteenable
+
+    .ctrl_irq_irq         ()          // ctrl_irq.irq
   );
 
   //SRAM to Ibex
-  assign instr_rdata    = instr_mem_rdata;
+  assign instr_rdata    = instr_mem_rdata_s;
+  assign instr_rvalid   = instr_mem_rvalid_s;
   assign data_rdata     = data_mem_rdata;
   always_ff @(posedge IO_CLK or negedge IO_RST_N) begin
     if (!IO_RST_N) begin
       instr_gnt       <= 'b0;
-      instr_rvalid    <= 'b0;
+      // instr_rvalid    <= 'b0;
       data_gnt        <= 'b0;
       data_rvalid     <= 'b0;
     end else begin
-      instr_gnt       <= instr_req && instr_mem_req;
-      instr_rvalid    <= instr_req && instr_mem_req;
+      // On-chip ROM -----
+      // instr_gnt       <= instr_req && instr_mem_req;
+      // instr_rvalid    <= instr_req && instr_mem_req;
+      // ---
+
+       // Wait might cause a problem!!!
+      instr_gnt       <= instr_req && instr_mem_req && ~instr_mem_wait;
       data_gnt        <= data_req && data_mem_req;
       data_rvalid     <= data_req && data_mem_req;
     end
@@ -178,10 +293,12 @@ module top_cyclone10lp (
   //Connect the LED output to the lower four bits of the most significant
   //byte
   logic [3:0] leds;
+  logic sample_gnt;
 
   always_ff @(posedge IO_CLK or negedge IO_RST_N) begin
     if (!IO_RST_N) begin
       leds <= 4'b0;
+      sample_gnt <= 1'b0;
     end else begin
       if (led_event && data_req && data_we) begin
         for (int i = 0; i < 4; i = i + 1) begin
@@ -190,9 +307,12 @@ module top_cyclone10lp (
           end
         end
       end
+      if(instr_gnt) begin
+        sample_gnt <= 1'b1;
+      end
     end
   end
-  assign LED_N = leds;
+  assign LED_N[3:0] = leds[3:0];
 
   // Clock and reset
   // clkgen_xil7series

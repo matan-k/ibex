@@ -44,10 +44,15 @@ $(PROGRAM).elf: $(OBJS) $(LINKER_SCRIPT)
 	srec_cat $^ -binary -offset 0x0000 -byte-swap 4 -o $@ -vmem 
 
 %.hex: %.bin
-	srec_cat $^ -binary -offset 0x0000 -byte-swap 4 -o $@ -Intel
+	srec_cat $^ -binary -offset 0x0000 -byte-swap 4 -o $@ -Intel -address-length=4
 
+#On chip memory
+# %.mif: %.bin
+# 	srec_cat $^ -binary -offset 0x0000 -byte-swap 4 -o $@ -mif 32 
+
+#External flash. This file should be converted using quartus to .hex
 %.mif: %.bin
-	srec_cat $^ -binary -offset 0x0000 -byte-swap 4 -o $@ -mif 32 
+	srec_cat $^ -binary -offset 0x0000 -byte-swap 4 -o $@ -mif 8 
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $^ $@
