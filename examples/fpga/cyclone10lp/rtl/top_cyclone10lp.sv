@@ -19,6 +19,7 @@ module top_cyclone10lp (
   parameter logic [31:0] MEM_MASK  = ~(ROM_SIZE - 1);
   parameter logic [31:0] RAM_OFFSET = 'h0000D000;
   parameter logic [31:0] RAM_MASK  = ~(RAM_SIZE - 1);
+  parameter int          PRINT_OFFSET = RAM_OFFSET + 8;
 
   // Instruction connection to SRAM
   logic        instr_req;
@@ -427,6 +428,26 @@ module top_cyclone10lp (
     .ram_rvalid_o(ram_rvalid),
     .ram_rdata_o(ram_rdata)
 );
+
+simulator_ctrl #(
+  // passed to simulator via log_name of output_char DPI call
+  .LogName("ibex_out.log"),
+  // If set flush on every char (useful for monitoring output whilst
+  // simulation is running).
+  .FlushOnChar(0)
+) print_module(
+  .clk_i(IO_CLK),
+  .rst_ni(IO_RST_N),
+
+  .req_i(print_req),
+  .we_i(print_req),
+  .be_i(data_be),
+  .addr_i('0),
+  .wdata_i(data_wdata),
+  .rvalid_o(),
+  .rdata_o()
+);
+
 `else 
 
 // ROM on external flash -----
@@ -460,87 +481,21 @@ epcq_and_ram u0 (
   .instr_print_if_clken      ('1),      //               .clken
   .instr_print_if_write      (print_req),      //               .write
   .instr_print_if_readdata   (),   //               .readdata
-  .instr_print_if_writedata  (instr_addr),  //               .writedata
+  .instr_print_if_writedata  (data_wdata),  //               .writedata
   .instr_print_if_byteenable ('1),
 
   .ctrl_irq_irq         ()          // ctrl_irq.irq
 );
-// -----
-
 
 `endif
 
-  // //SRAM to Ibex
-  // assign instr_rdata    = flash_rdata_s;
-  // assign data_rdata     = ram_rvalid ? ram_rdata : flash_rdata_s;
-
-  // // External flash ROM ----
-  // assign instr_rvalid   = (~during_flash_data_read) & flash_rvalid_s;
-  // assign data_rvalid    = (during_flash_data_read & flash_rvalid_s) | (internal_ack) | (ram_rvalid);
-  // assign instr_gnt = instr_gnt_aux/* & ~data_flash_req & ~flash_wait*/;
-  // // -----
-
-  // always_ff @(posedge IO_CLK or negedge IO_RST_N) begin
-  //   if (!IO_RST_N) begin
-  //     instr_gnt_aux       <= 'b0;
-  //     data_gnt        <= 'b0;
-  //     ram_rvalid      <= 'b0;
-  //     during_flash_data_read <= 'b0;
-  //     during_flash_data_write <= 'b0;
-  //     print_counter   <= '0;
-
-  //     instr_rdata_s <= '0;
-  //     data_rdata_s <='0;
-  //     instr_rvalid_s <='0;
-  //     data_rvalid_s <='0;
-  //     internal_ack  <= '0;
-
-  //     // On chip ROM -----
-  //     // instr_rvalid    <= 'b0;
-  //     // -----
-  //   end else begin
-  //     // On-chip ROM -----
-  //     // instr_gnt       <= instr_req && flash_req;
-  //     // instr_rvalid    <= instr_req && flash_req;
-  //     // ---
-  //     instr_rdata_s <= instr_rdata;
-  //     data_rdata_s <=data_rdata;
-  //     instr_rvalid_s <=instr_rvalid;
-  //     data_rvalid_s <=data_rvalid;
-
-  //     // Instruction request is delayed by one clock to enable data request to be processed
-  //     instr_gnt_aux   <= instr_flash_req & ~flash_wait /*& ~instr_gnt_aux*/;
-
-  //     data_gnt        <= (ram_req) | (data_flash_req & ~flash_wait);
-  //     ram_rvalid      <= ram_req;
-  //     internal_ack    <= during_flash_data_write & ~flash_wait;
-  //     // internal_ack    <= flash_write_s & data_gnt;
-
-  //     if(flash_rvalid_s) begin
-  //       during_flash_data_read <= 1'b0;
-  //     end else if(data_flash_req && ~data_we) begin
-  //       during_flash_data_read <= 1'b1;
-  //     end
-
-  //     if(flash_write_s) begin
-  //       during_flash_data_write <= 1'b1;
-  //     end else if(~flash_wait) begin
-  //       during_flash_data_write <= 1'b0;
-  //     end
-
-  //     if(data_gnt && print_counter < 500) begin
-  //       print_counter <= print_counter + 1;
-  //     end
-  //   end
-  // end
-
-  assign print_req = instr_req && ~flash_wait;
+  assign print_req = data_we & ram_req & data_addr == PRINT_OFFSET;
 
   always_ff @(posedge IO_CLK or negedge IO_RST_N) begin
     if(~IO_RST_N) begin
        print_counter <= 0;
     end else begin
-      if(instr_gnt && print_counter < 500) begin
+      if(ram_rvalid && print_counter < 500) begin
         print_counter <= print_counter + 1;
       end
     end
@@ -566,14 +521,10 @@ epcq_and_ram u0 (
         end
       end
 
-      // if(instr_addr == 'he8) begin
-      //   sample_trigger <= 1'b1;
-      // end
-
-      if(data_addr == 'ha330) begin
-        // if(read_counter == 0) begin
+      if(current_state == DATA_WRITE && data_addr == 'ha334 && ~flash_wait && ~flash_req) begin
+        if(read_counter == 1) begin
           sample_trigger <= 1'b1;
-        // end
+        end
         read_counter <= read_counter + 1;
       end
     end
