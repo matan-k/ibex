@@ -17,7 +17,7 @@ module top_cyclone10lp (
   parameter int          RAM_SIZE  = 8 * 1024; // 8kB
   parameter logic [31:0] MEM_START = 32'h00000000;
   parameter logic [31:0] MEM_MASK  = ~(ROM_SIZE - 1);
-  parameter logic [31:0] RAM_OFFSET = 'h0000D000;
+  parameter logic [31:0] RAM_OFFSET = 'h0000F000;
   parameter logic [31:0] RAM_MASK  = ~(RAM_SIZE - 1);
   parameter int          PRINT_OFFSET = RAM_OFFSET + 8;
 
@@ -27,11 +27,6 @@ module top_cyclone10lp (
   logic        instr_rvalid;
   logic [31:0] instr_addr;
   logic [31:0] instr_rdata;
-
-  logic        instr_rvalid_s;
-  logic [31:0] instr_rdata_s;
-  logic        instr_gnt_aux;
-  logic        instr_gnt_aux_s; 
 
   // Data connection to SRAM
   logic        data_req;
@@ -65,17 +60,8 @@ module top_cyclone10lp (
   logic        flash_data_gnt;
 
   // Sampled ROM arbiter (for ROM on external Flash)
-  logic [31:0] flash_addr_s;
-  logic        flash_write_s;
-  logic  [3:0] flash_be_s;
-  logic [31:0] flash_wdata_s;
   logic        flash_rvalid_s;
   logic [31:0] flash_rdata_s;
-  logic        flash_read_s;
-  logic        flash_wait_s; 
-  logic        during_flash_data_read;
-  logic        during_flash_data_write;
-  logic        internal_ack;
 
   // RAM arbiter
   logic [31:0] ram_addr;
@@ -111,9 +97,6 @@ module top_cyclone10lp (
   } flash_state;
 
   flash_state current_state;
-
-  // LED events
-  logic led_event;
 
   ibex_core #(
      .DmHaltAddr(32'h00000000),
@@ -159,7 +142,11 @@ module top_cyclone10lp (
 
   assign data_flash_req = data_req & (data_addr < RAM_OFFSET);
   assign ram_req = data_req & (data_addr >= RAM_OFFSET);
+  assign data_rvalid = (ram_rvalid) ? ram_rvalid : flash_rvalid_s;
+  assign data_rdata = (ram_rvalid) ? ram_rdata : flash_rdata_s;
+  assign data_gnt = ram_req | flash_data_gnt;
 
+  // Flash interface arbitration - between instruction and data signals
   always_ff @(posedge IO_CLK or negedge IO_RST_N) begin 
     if(~IO_RST_N) begin
       current_state <= IDLE;
@@ -196,7 +183,7 @@ module top_cyclone10lp (
               flash_write <= data_we;
               flash_addr <= data_addr / 4;
               flash_be <= data_be;
-              flash_wdata <= flash_wdata_endianity_fix;
+              flash_wdata <= data_wdata;//flash_wdata_endianity_fix;
               flash_req <= 1'b1;
               flash_data_gnt <= 1'b1;
             end else begin
@@ -244,74 +231,6 @@ module top_cyclone10lp (
     end
   end
 
-  assign data_rvalid = (ram_rvalid) ? ram_rvalid : flash_rvalid_s;
-  assign data_rdata = (ram_rvalid) ? ram_rdata : flash_rdata_s;
-  assign data_gnt = ram_req | flash_data_gnt;
-
-`ifndef Simulation_f
-  always_ff @(posedge IO_CLK or negedge IO_RST_N) begin 
-    if(~IO_RST_N) begin
-      ram_rvalid <= 0;
-    end else begin
-      ram_rvalid <= ram_req;
-    end
-  end
-`endif
-  
-
-  // // Sample the interface for timing closure
-  // always_ff @(posedge IO_CLK or negedge IO_RST_N) begin
-  //   if(~IO_RST_N) begin
-  //     flash_addr_s <= '0;
-  //     flash_write_s <= '0;
-  //     flash_be_s <= '0;
-  //     flash_wdata_s <= '0;
-  //     flash_rvalid_s <= '0;
-  //     flash_rdata_s <= '0;
-  //     flash_read_s <= '0;
-  //     data_addr_s   <= '0;
-  //     data_wdata_s <= '0;
-  //     flash_wait_s  <='0;
-  //     instr_addr_s <= '0;
-  //     data_we_s <= '0;
-  //     data_be_s <= '0;
-  //   end else begin
-  //     // if (!flash_wait) begin
-  //       instr_addr_s <= instr_addr;
-  //       data_addr_s <= data_addr;
-  //       data_wdata_s <= data_wdata;
-  //       data_we_s    <= data_we;
-  //       data_be_s    <= data_be;
-
-  //       if(instr_flash_req/* && instr_gnt*/) begin
-  //         flash_addr_s       <= instr_addr_s / 4;
-  //         flash_read_s       <= 1'b1;
-  //         flash_write_s      <= '0;
-  //         flash_wdata_s      <= '0;
-  //         flash_be_s         <= '0;
-  //       end else if(data_flash_req/* && data_gnt*/) begin
-  //         flash_addr_s       <= data_addr_s / 4 /* + 1*/;
-  //         flash_read_s       <= ~data_we /**/; // Used to partially work. Read gets a priority over write..
-  //         flash_write_s      <= data_we;
-  //         flash_wdata_s      <= data_wdata_s;
-  //         flash_be_s         <= data_be;
-  //       end else begin
-  //         flash_addr_s       <= '0;
-  //         flash_read_s       <= '0;
-  //         flash_write_s      <= '0;
-  //         flash_wdata_s      <= '0;
-  //         flash_be_s         <= '0;
-  //       end
-
-  //       flash_rvalid_s <= flash_rvalid;
-  //       flash_rdata_s <= flash_rdata_endianity_fix;
-  //       // flash_rdata_s <= flash_rdata;
-
-  //       flash_wait_s <= flash_wait;
-  //     // end
-  //   end
-  // end
-
   genvar i;
   generate
     for (i = 0; i < 4; i++) begin: endianity_fix 
@@ -319,89 +238,6 @@ module top_cyclone10lp (
       assign flash_wdata_endianity_fix[(i+1)*8-1: i*8] = data_wdata[(4-i)*8-1 : (3-i)*8];
     end
   endgenerate
-
-  //Connect Ibex to SRAM
-  // always_comb begin
-  //   instr_flash_req  = 1'b0;
-  //   data_flash_req   = 1'b0;
-  //   // instr_addr_s       = 32'b0;
-  //   flash_write      = 1'b0;
-  //   flash_read       = 1'b0;
-  //   flash_be         = 4'b0;
-  //   flash_wdata      = 32'b0;
-  //   ram_req          = 1'b0;
-  //   ram_addr         = 32'b0;
-  //   ram_write        = 1'b0;
-  //   ram_be           = 4'b0;
-  //   ram_wdata        = 32'b0;
-  //   led_event        = 1'b0;
-  //   print_req        = '0;
-  //   print_addr       = '0;
-  //   print_write      = '0;
-  //   print_wdata      = '0;
-
-  //  // ROM assignments. Data first.
-    
-  //  if (instr_req) begin
-  //    instr_flash_req = (instr_addr & MEM_MASK) == MEM_START;
-
-  //    // print_req       = (instr_addr & MEM_MASK) == MEM_START;
-  //    // print_addr      = print_counter;
-  //    // print_write     = print_req;
-  //    // print_wdata     = instr_addr;
-  //    // -----
-  //  end else if (data_req) begin
-  //     // Flash
-  //     data_flash_req = data_addr < RAM_OFFSET;
-      
-  //     print_req       = (data_addr & MEM_MASK) == MEM_START;
-  //     print_addr      = print_counter;
-  //     print_write     = print_req;
-  //     print_wdata     = data_addr;
-
-  //     // RAM
-  //     ram_req        = data_addr >=RAM_OFFSET;
-  //     // ram_req       = (data_addr & MEM_MASK) == MEM_START;
-
-  //     ram_write      = data_we;
-  //     ram_be         = data_be;
-  //     ram_addr       = (data_addr - RAM_OFFSET) / 4; // translate absolute address to relative address
-  //     ram_wdata      = data_wdata;
-
-  //     // LED
-  //     led_event      = data_addr == RAM_OFFSET;
-  //   end
-  // end
-
-  // On-chip ROM -----
-  // jtag_bridge memories_and_jtag (
-  //   .clk_clk           (IO_CLK),           //    clk.clk
-  //   .reset_reset_n     (IO_RST_N),     //  reset.reset_n
-
-  //   //ROM
-  //   .rom_if_address    (flash_addr),    // rom_if.address
-  //   .rom_if_chipselect (flash_req), //       .chipselect
-  //   .rom_if_clken      ('1),      //       .clken
-  //   .rom_if_write      (flash_write),      //       .write
-  //   .rom_if_readdata   (flash_rdata),   //       .readdata
-  //   .rom_if_writedata  (flash_wdata),  //       .writedata
-  //   .rom_if_byteenable (flash_be)  //       .byteenable
-
-  //   //RAM
-  //   .ram_if_address    (ram_addr),    // ram_if.address
-  //   .ram_if_chipselect (ram_req), //       .chipselect
-  //   .ram_if_clken      ('1),      //       .clken
-  //   .ram_if_write      (ram_write),      //       .write
-  //   .ram_if_readdata   (ram_rdata),   //       .readdata
-  //   .ram_if_writedata  (ram_wdata),  //       .writedata
-  //   .ram_if_byteenable (ram_be), //       .byteenable
-  // );
-  // ------
-
-  // flash_reader u0 (
-  //   .clk_clk       (IO_CLK),       //   clk.clk
-  //   .reset_reset_n (IO_RST_N)  // reset.reset_n
-  // );
 
 `ifdef Simulation_f 
 
@@ -441,9 +277,9 @@ simulator_ctrl #(
 
   .req_i(print_req),
   .we_i(print_req),
-  .be_i(data_be),
+  .be_i(print_be),
   .addr_i('0),
-  .wdata_i(data_wdata),
+  .wdata_i(print_wdata),
   .rvalid_o(),
   .rdata_o()
 );
@@ -481,15 +317,27 @@ epcq_and_ram u0 (
   .instr_print_if_clken      ('1),      //               .clken
   .instr_print_if_write      (print_req),      //               .write
   .instr_print_if_readdata   (),   //               .readdata
-  .instr_print_if_writedata  (data_wdata),  //               .writedata
-  .instr_print_if_byteenable ('1),
+  .instr_print_if_writedata  (print_wdata),  //               .writedata
+  .instr_print_if_byteenable (print_be),
 
   .ctrl_irq_irq         ()          // ctrl_irq.irq
 );
 
+  always_ff @(posedge IO_CLK or negedge IO_RST_N) begin 
+    if(~IO_RST_N) begin
+      ram_rvalid <= 0;
+    end else begin
+      ram_rvalid <= ram_req;
+    end
+  end
+
 `endif
 
+ // Print interface assignments
   assign print_req = data_we & ram_req & data_addr == PRINT_OFFSET;
+  // assign print_req = flash_read;
+  assign print_wdata = data_wdata;
+  assign print_be   = '1;
 
   always_ff @(posedge IO_CLK or negedge IO_RST_N) begin
     if(~IO_RST_N) begin
