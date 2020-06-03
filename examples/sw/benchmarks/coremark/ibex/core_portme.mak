@@ -9,10 +9,15 @@ OUTFILES = $(OPATH)coremark.dis $(OPATH)coremark.map
 NAME                 = coremark
 PORT_CLEAN          := $(OUTFILES)
 SIMPLE_SYSTEM_COMMON = ../../examples/sw/simple_system/common
-EXT_SRCS             = $(wildcard $(SIMPLE_SYSTEM_COMMON)/*.c)
-CRT0				         = $(SIMPLE_SYSTEM_COMMON)/crt0.S
-LINKER_SCRIPT        = $(SIMPLE_SYSTEM_COMMON)/link.ld
+LED_PATH             = ../../examples/sw/led
+# EXT_SRCS             = $(wildcard $(SIMPLE_SYSTEM_COMMON)/*.c)
+# CRT0				 = $(SIMPLE_SYSTEM_COMMON)/crt0.S
+# LINKER_SCRIPT        = $(SIMPLE_SYSTEM_COMMON)/link.ld
+EXT_SRCS             = $(LED_PATH)/simple_system_common.c
+CRT0				 = $(LED_PATH)/crt0.S
+LINKER_SCRIPT        = $(LED_PATH)/link.ld
 
+OBJCOPY ?= $(subst gcc,objcopy,$(wordlist 1,1,$(CC)))
 # Flag : OUTFLAG
 #	Use this flag to define how to to get an executable (e.g -o)
 OUTFLAG = -o
@@ -27,15 +32,20 @@ LD = riscv32-unknown-elf-ld
 AS = riscv32-unknown-elf-as
 # Flag : CFLAGS
 #	Use this flag to define compiler options. Note, you can add compiler options from the command line using XCFLAGS="other flags"
-PORT_CFLAGS = -g -march=rv32imc -mabi=ilp32 -static -mcmodel=medlow -mtune=sifive-3-series \
+PORT_CFLAGS = -g -march=rv32im -mabi=ilp32 -static -mcmodel=medlow -mtune=sifive-3-series \
   -O3 -falign-functions=16 -funroll-all-loops \
 	-finline-functions -falign-jumps=4 \
   -nostdlib -nostartfiles -ffreestanding -mstrict-align \
 	-DTOTAL_DATA_SIZE=2000 -DMAIN_HAS_NOARGC=1 \
 	-DPERFORMANCE_RUN=1
 
+# PORT_CFLAGS = -march=rv32imc -mabi=ilp32 -static -mcmodel=medlow \
+# 	-nostdlib -nostartfiles -g -Wall -ffreestanding -falign-functions=16 \
+# 	-funroll-all-loops	-falign-jumps=4 -mstrict-align -DTOTAL_DATA_SIZE=2000 -DMAIN_HAS_NOARGC=1 -DPERFORMANCE_RUN=1 \
+# 	-mtune=sifive-3-series  -finline-functions
+
 FLAGS_STR = "$(PORT_CFLAGS) $(XCFLAGS) $(XLFLAGS) $(LFLAGS_END)"
-CFLAGS += $(PORT_CFLAGS) $(XCFLAGS) -I$(SIMPLE_SYSTEM_COMMON) -I$(PORT_DIR) -I.
+CFLAGS += $(PORT_CFLAGS) $(XCFLAGS) -I$(LED_PATH) -I$(PORT_DIR) -I.
 #Flag : LFLAGS_END
 #	Define any libraries needed for linking or other flags that should come at the end of the link line (e.g. linker scripts).
 #	Note : On certain platforms, the default clock_gettime implementation is supported but requires linking of librt.
@@ -82,8 +92,13 @@ $(OPATH)$(PORT_DIR)/%$(OEXT) : %.s
 
 .PHONY : port_clean port_prebuild port_postbuild port_prerun port_postrun port_preload port_postload
 
+
+
 port_postbuild:
 	riscv32-unknown-elf-objdump -SD $(OPATH)coremark.elf > $(OPATH)coremark.dis
+	$(OBJCOPY) -O binary $(OPATH)coremark.elf $(OPATH)coremark.bin
+	srec_cat $(OPATH)coremark.bin -binary -offset 0x0000 -byte-swap 4 -o $(OPATH)coremark.hex -Intel -address-length=4
+	srec_cat $(OPATH)coremark.bin -binary -offset 0x0000 -o $(OPATH)coremark.vmem -vmem
 
 # FLAG : OPATH
 # Path to the output folder. Default - current folder.

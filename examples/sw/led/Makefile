@@ -6,9 +6,9 @@
 
 PROGRAM ?= led
 PROGRAM_CFLAGS = -Wall -g -Os
-ARCH = rv32imc
+ARCH = rv32im
 # ARCH = rv32im # to disable compressed instructions
-SRCS = $(PROGRAM).c simple_system_common.c strings.c 
+SRCS = $(PROGRAM).c simple_system_common.c strings.c ee_printf.c core_portme.c 
 
 CC = riscv32-unknown-elf-gcc
 
@@ -41,7 +41,7 @@ $(PROGRAM).elf: $(OBJS) $(LINKER_SCRIPT)
 # read from the elf file, but is lost in the bin file.
 # Switching to objcopy will resolve that as well.
 %.vmem: %.bin
-	srec_cat $^ -binary -offset 0x0000 -byte-swap 4 -o $@ -vmem 
+	srec_cat $^ -binary -offset 0x0000 -o $@ -vmem 
 
 %.hex: %.bin
 	srec_cat $^ -binary -offset 0x0000 -byte-swap 4 -o $@ -Intel -address-length=4

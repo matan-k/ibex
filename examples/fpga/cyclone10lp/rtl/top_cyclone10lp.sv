@@ -5,6 +5,7 @@
 module top_cyclone10lp (
     input               IO_CLK,
     input               IO_RST_N,
+    input               RELEASE,
     output [3:0]        LED_N
 );
 
@@ -82,11 +83,21 @@ module top_cyclone10lp (
   logic        print_req;
   logic        print_write;
   logic  [3:0] print_be;
-  logic [31:0] print_wdata;
+  logic [7:0] print_wdata;
   logic        print_rvalid;
   logic [31:0] print_rdata;
   logic        print_read;
   logic [31:0] print_counter;
+
+  // trigger based clock enable
+  logic        clock_enable;
+  logic        trigger;
+  logic        system_clock;
+  logic        release_sig;
+  logic        release_s;
+  logic        release_s2;
+  logic [31:0] release_counter;
+
 
   // Regfile write data selection
   typedef enum logic [1:0]{
@@ -98,11 +109,61 @@ module top_cyclone10lp (
 
   flash_state current_state;
 
+
+trigger_clock_enable 
+#(
+ .DELAY(128),
+ .TRIGGER_EDGE(1'b1),
+ .RELEASE_EDGE(1'b1)
+)
+ce_controller
+(
+  .clk(IO_CLK),    // Clock
+  .rst_n(IO_RST_N),  // Asynchronous reset active low
+  .trigger_i(trigger),
+  .release_i(release_sig),
+
+  .clock_enable(clock_enable)
+);
+
+// assign trigger = print_req;
+assign release_sig = ~release_s & release_s2;
+
+always_ff @(posedge IO_CLK or negedge IO_RST_N) begin
+  if(~IO_RST_N) begin
+    release_s  <= '0;
+    release_s2 <= '0;
+  end else begin
+    release_s <= RELEASE;
+    release_s2 <= release_s;
+  end
+end
+
+// always_ff @(posedge IO_CLK or negedge IO_RST_N) begin
+//   if(~IO_RST_N) begin
+//     release_counter <= 0;
+//     release_sig <= 1'b0;
+//   end else begin
+//     if(trigger) begin
+//       release_counter <= 160;
+//       release_sig <=1'b0;
+//     end else if (release_counter > 1) begin
+//       release_sig <=1'b0;
+//       release_counter <= release_counter - 1;
+//     end else if (release_counter == 1) begin
+//       release_sig <= 1'b1;
+//       release_counter <= release_counter - 1;
+//     end else if (release_counter == 0) begin
+//       release_sig <= 1'b0;
+//     end
+//   end
+// end
+
   ibex_core #(
      .DmHaltAddr(32'h00000000),
      .DmExceptionAddr(32'h00000000)
   ) u_core (
-     .clk_i                 (IO_CLK),
+     .clk_i                 (system_clock),
      .rst_ni                (IO_RST_N),
 
      .test_en_i             ('b0),
@@ -147,7 +208,7 @@ module top_cyclone10lp (
   assign data_gnt = ram_req | flash_data_gnt;
 
   // Flash interface arbitration - between instruction and data signals
-  always_ff @(posedge IO_CLK or negedge IO_RST_N) begin 
+  always_ff @(posedge system_clock or negedge IO_RST_N) begin 
     if(~IO_RST_N) begin
       current_state <= IDLE;
       flash_addr <= '0;
@@ -236,6 +297,7 @@ module top_cyclone10lp (
     for (i = 0; i < 4; i++) begin: endianity_fix 
       assign flash_rdata_endianity_fix[(i+1)*8-1: i*8] = flash_rdata[(4-i)*8-1 : (3-i)*8];
       assign flash_wdata_endianity_fix[(i+1)*8-1: i*8] = data_wdata[(4-i)*8-1 : (3-i)*8];
+      assign flash_addr_endianity_fix[(i+1)*8-1: i*8] = instr_addr[(4-i)*8-1 : (3-i)*8];
     end
   endgenerate
 
@@ -244,7 +306,7 @@ module top_cyclone10lp (
   flash_and_ram_simulator #(
     .Depth(20000)
 ) u_ram (
-    .clk_i(IO_CLK),
+    .clk_i(system_clock),
     .rst_ni(IO_RST_N),
 
     .flash_req_i(flash_req),
@@ -259,7 +321,7 @@ module top_cyclone10lp (
     .ram_req_i(ram_req),
     .ram_we_i(data_we),
     .ram_be_i(data_be),
-    .ram_addr_i(data_addr / 4),
+    .ram_addr_i((data_addr - RAM_OFFSET) / 4),
     .ram_wdata_i(data_wdata),
     .ram_rvalid_o(ram_rvalid),
     .ram_rdata_o(ram_rdata)
@@ -272,7 +334,7 @@ simulator_ctrl #(
   // simulation is running).
   .FlushOnChar(0)
 ) print_module(
-  .clk_i(IO_CLK),
+  .clk_i(system_clock),
   .rst_ni(IO_RST_N),
 
   .req_i(print_req),
@@ -284,11 +346,18 @@ simulator_ctrl #(
   .rdata_o()
 );
 
+prim_clock_gating clock_gating(
+  .clk_i(IO_CLK),
+  .en_i(clock_enable),
+  .test_en_i('0),
+  .clk_o(system_clock)
+);
+
 `else 
 
 // ROM on external flash -----
 epcq_and_ram u0 (
-  .clk_clk              (IO_CLK),              //      clk.clk
+  .clk_clk              (system_clock),              //      clk.clk
   .reset_reset_n        (IO_RST_N),        //    reset.reset_n
 
   // ROM
@@ -318,12 +387,12 @@ epcq_and_ram u0 (
   .instr_print_if_write      (print_req),      //               .write
   .instr_print_if_readdata   (),   //               .readdata
   .instr_print_if_writedata  (print_wdata),  //               .writedata
-  .instr_print_if_byteenable (print_be),
+  // .instr_print_if_byteenable (print_be),
 
   .ctrl_irq_irq         ()          // ctrl_irq.irq
 );
 
-  always_ff @(posedge IO_CLK or negedge IO_RST_N) begin 
+  always_ff @(posedge system_clock or negedge IO_RST_N) begin 
     if(~IO_RST_N) begin
       ram_rvalid <= 0;
     end else begin
@@ -331,19 +400,27 @@ epcq_and_ram u0 (
     end
   end
 
+  // assign system_clock = IO_CLK;
+
+   altctrl altctrl_inst (
+   .inclk  (IO_CLK),  //  altclkctrl_input.inclk
+   .ena    (clock_enable),    //                  .ena
+   .outclk (system_clock)  // altclkctrl_output.outclk
+  );
+
 `endif
 
  // Print interface assignments
   assign print_req = data_we & ram_req & data_addr == PRINT_OFFSET;
-  // assign print_req = flash_read;
-  assign print_wdata = data_wdata;
+  // assign print_req = instr_req;
+  assign print_wdata = data_wdata[7:0];
   assign print_be   = '1;
 
-  always_ff @(posedge IO_CLK or negedge IO_RST_N) begin
+  always_ff @(posedge system_clock or negedge IO_RST_N) begin
     if(~IO_RST_N) begin
        print_counter <= 0;
     end else begin
-      if(ram_rvalid && print_counter < 500) begin
+      if(print_req && print_counter < 800) begin
         print_counter <= print_counter + 1;
       end
     end
@@ -355,7 +432,7 @@ epcq_and_ram u0 (
   logic sample_trigger;
   logic [31:0] read_counter;
 
-  always_ff @(posedge IO_CLK or negedge IO_RST_N) begin
+  always_ff @(posedge system_clock or negedge IO_RST_N) begin
     if (!IO_RST_N) begin
       leds <= 4'b0;
       sample_trigger <=1'b0;
@@ -369,11 +446,11 @@ epcq_and_ram u0 (
         end
       end
 
-      if(current_state == DATA_WRITE && data_addr == 'ha334 && ~flash_wait && ~flash_req) begin
-        if(read_counter == 1) begin
+      if(flash_read & flash_addr == 'h20) begin
+        // if(read_counter == 1) begin
           sample_trigger <= 1'b1;
-        end
-        read_counter <= read_counter + 1;
+        // end
+        // read_counter <= read_counter + 1;
       end
     end
   end

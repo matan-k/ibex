@@ -14,8 +14,8 @@ __DYNAMIC  =  0;
 MEMORY
 {
     /* 992 kB should be enough for anybody... */
-    ram         : ORIGIN = 0x00000000, LENGTH = 0xC000 /* 48 kB */
-    stack       : ORIGIN = 0x0000C000, LENGTH = 0x1000  /* 4 kB */
+    ram         : ORIGIN = 0x00000000, LENGTH = 0xF000 /* 48 kB */
+    stack       : ORIGIN = 0x0000F000, LENGTH = 0x1000  /* 4 kB */
 }
 
 /* Stack information variables */

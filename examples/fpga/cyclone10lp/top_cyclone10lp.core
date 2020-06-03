@@ -2,7 +2,7 @@ CAPI=2:
 # Copyright lowRISC contributors.
 # Licensed under the Apache License, Version 2.0, see LICENSE for details.
 # SPDX-License-Identifier: Apache-2.0
-name: "lowrisc:ibex:top_cyclone10lp:0.1"
+name: "lowrisc:ibex:top_cyclone10lp"
 description: "Ibex example toplevel for cyclone10LP on EVB kit"
 filesets:
   files_rtl_cyclone10lp:
@@ -10,8 +10,27 @@ filesets:
       - lowrisc:ibex:ibex_core
       - lowrisc:ibex:fpga_intel_shared
     files:
+      - rtl/trigger_clock_enable.sv
       - rtl/top_cyclone10lp.sv
     file_type: systemVerilogSource
+
+  files_sim_verilator:
+    depend:
+      - lowrisc:dv_verilator:memutil_verilator
+      - lowrisc:dv_verilator:simutil_verilator
+      - lowrisc:ibex:ibex_core_tracing
+      - lowrisc:ibex:sim_shared
+      - lowrisc:dv_verilator:ibex_pcounts
+      - lowrisc:ibex:fpga_intel_shared
+    files:
+      - rtl/trigger_clock_enable.sv
+      - rtl/top_cyclone10lp.sv
+      - top_cyclone10lp.cc: { file_type: cppSource }
+    file_type: systemVerilogSource
+
+  files_verilator_waiver:
+    files:
+      - lint/verilator_waiver.vlt: {file_type: vlt}
 
   files_constraints:
     files:
@@ -35,6 +54,35 @@ parameters:
     description: SRAM initialization file in vmem hex format
     default: "../../../../../examples/sw/led/led.vmem"
     paramtype: vlogdefine
+  RV32M:
+    datatype: int
+    paramtype: vlogparam
+    default: 1
+    description: Enable the M ISA extension (hardware multiply/divide) [0/1]
+  RV32E:
+    datatype: int
+    paramtype: vlogparam
+    default: 0
+    description: Enable the E ISA extension (reduced register set) [0/1]
+  SRAM_INIT_FILE:
+    datatype: str
+    paramtype: vlogdefine
+    description: Path to a vmem file to initialize the RAM with
+  BranchTargetALU:
+    datatype: int
+    paramtype: vlogparam
+    default: 0
+    description: Enables seperate branch target ALU (increasing branch performance EXPERIMENTAL) [0/1]
+  WritebackStage:
+    datatype: int
+    paramtype: vlogparam
+    default: 0
+    description: Enables third pipeline stage (EXPERIMENTAL) [0/1]
+  Simulation_f:
+    datatype: int
+    paramtype: vlogdefine
+    default: 1
+    description: Flag for simulation modules
 
 targets:
   synth:
@@ -48,3 +96,42 @@ targets:
     tools:
       quartus:
         device: "10CL025YU256I7G"  # Default to Cyclone10LP evaluation kit
+  sim:
+    default_tool: verilator
+    filesets:
+      - tool_verilator ? (files_verilator_waiver)
+      - files_sim_verilator
+    parameters:
+      - RV32M
+      - RV32E
+      - BranchTargetALU
+      - WritebackStage
+      - SRAM_INIT_FILE
+      - Simulation_f
+    toplevel: top_cyclone10lp
+    tools:
+      vcs:
+        vcs_options:
+          - '-debug_access+r'
+      verilator:
+        mode: cc
+        verilator_options:
+# Disabling tracing reduces compile times by multiple times, but doesn't have a
+# huge influence on runtime performance. (Based on early observations.)
+          - '--trace'
+          - '--trace-fst' # this requires -DVM_TRACE_FMT_FST in CFLAGS below!
+          - '--trace-structs'
+          - '--trace-params'
+          - '--trace-max-array 1024'
+# compiler flags
+#
+# -O
+#   Optimization levels have a large impact on the runtime performance of the
+#   simulation model. -O2 and -O3 are pretty similar, -Os is slower than -O2/-O3
+          - '-CFLAGS "-std=c++11 -Wall -DVM_TRACE_FMT_FST -DTOPLEVEL_NAME=top_cyclone10lp -g -O0"'
+          - '-LDFLAGS "-pthread -lutil -lelf"'
+          - "-Wall"
+          - "-Wno-PINCONNECTEMPTY"
+          # XXX: Cleanup all warnings and remove this option
+          # (or make it more fine-grained at least)
+          - "-Wno-fatal"

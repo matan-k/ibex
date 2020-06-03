@@ -3,11 +3,11 @@ CAPI=2:
 # Licensed under the Apache License, Version 2.0, see LICENSE for details.
 # SPDX-License-Identifier: Apache-2.0
 name: "lowrisc:ibex:fpga_intel_shared"
-description: "Collection of useful RTL for Xilinx based examples"
+description: "Collection of useful RTL for Intel based examples"
 filesets:
   files_sv:
     files:
-      - rtl/ram_1p.sv
+      - rtl/fpga/flash_and_ram_simulator.sv
     file_type: systemVerilogSource
 
 targets:

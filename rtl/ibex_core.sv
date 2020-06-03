@@ -338,18 +338,23 @@ module ibex_core #(
   // generates all clocks except the one for the debug unit which is
   // independent
   
-  altctrl u0 (
-		.inclk  (clk_i),  //  altclkctrl_input.inclk
-		.ena    (clock_en),    //                  .ena
-		.outclk (clk)  // altclkctrl_output.outclk
-	);
-  // prim_clock_gating core_clock_gate_i (
-  //     .clk_i     ( clk_i           ),
-  //     .en_i      ( clock_en        ),
-  //     .test_en_i ( test_en_i       ),
-  //     .clk_o     ( clk             )
-  // );
+  `ifdef Simulation_f
+  prim_clock_gating core_clock_gate_i (
+      .clk_i     ( clk_i           ),
+      .en_i      ( clock_en        ),
+      .test_en_i ( test_en_i       ),
+      .clk_o     ( clk             )
+  );
 
+  `else 
+  //  altctrl u0 (
+  //  .inclk  (clk_i),  //  altclkctrl_input.inclk
+  //  .ena    (clock_en),    //                  .ena
+  //  .outclk (clk)  // altclkctrl_output.outclk
+  // );
+  assign clk = clk_i;
+
+  `endif
   //////////////
   // IF stage //
   //////////////

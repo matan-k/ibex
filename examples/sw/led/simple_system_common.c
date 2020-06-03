@@ -5,19 +5,15 @@
 #include "simple_system_common.h"
 
 int putchar(int c) {
-  static int offset = 10;
+  static int offset = 8;
   DEV_WRITE(SIM_CTRL_BASE + offset, (unsigned char)c);
-  offset++;
   return c;
 }
 
 int puts(const char *str) {
-  putchar(3);
   while (*str) {
     putchar(*str++);
-    putchar(4);
   }
-  putchar(5);
   return 0;
 }
 

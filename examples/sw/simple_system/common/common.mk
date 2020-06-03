@@ -33,7 +33,7 @@ OBJS := ${C_SRCS:.c=.o} ${ASM_SRCS:.S=.o} ${CRT:.S=.o}
 DEPS = $(OBJS:%.o=%.d)
 
 ifdef PROGRAM
-OUTFILES := $(PROGRAM).elf $(PROGRAM).vmem $(PROGRAM).bin $(PROGRAM).dis
+OUTFILES := $(PROGRAM).elf $(PROGRAM).vmem $(PROGRAM).mif $(PROGRAM).bin $(PROGRAM).dis
 else
 OUTFILES := $(OBJS)
 endif
@@ -52,6 +52,8 @@ $(PROGRAM).elf: $(OBJS) $(LINKER_SCRIPT)
 # is widely available.
 %.vmem: %.bin
 	srec_cat $^ -binary -offset 0x0000 -byte-swap 4 -o $@ -vmem
+%.mif: %.bin
+	srec_cat $^ -binary -offset 0x0000 -byte-swap 4 -o $@ -mif 32
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $^ $@

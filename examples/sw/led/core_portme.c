@@ -6,9 +6,12 @@
 
 #include "core_portme.h"
 
-#include "coremark.h"
+// #include "coremark.h"
 
 #include "simple_system_common.h"
+
+#define ITERATIONS 10
+
 
 #if VALIDATION_RUN
 volatile ee_s32 seed1_volatile = 0x3415;
@@ -53,7 +56,7 @@ CORETIMETYPE barebones_clock() {
 #define MYTIMEDIFF(fin, ini) ((fin) - (ini))
 #define TIMER_RES_DIVIDER 1
 #define SAMPLE_TIME_IMPLEMENTATION 1
-#define CLOCKS_PER_SEC 50000000
+#define CLOCKS_PER_SEC 500000
 #define EE_TICKS_PER_SEC (CLOCKS_PER_SEC / TIMER_RES_DIVIDER)
 
 void pcount_read(uint32_t pcount_out[]) {

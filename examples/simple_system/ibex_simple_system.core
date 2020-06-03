@@ -47,6 +47,11 @@ parameters:
     paramtype: vlogparam
     default: 0
     description: Enables third pipeline stage (EXPERIMENTAL) [0/1]
+  Simulation_f:
+    datatype: int
+    paramtype: vlogdefine
+    default: 1
+    description: Flag for simulation modules
 
 targets:
   sim:
@@ -60,6 +65,7 @@ targets:
       - BranchTargetALU
       - WritebackStage
       - SRAM_INIT_FILE
+      - Simulation_f
     toplevel: ibex_simple_system
     tools:
       vcs:
